@@ -1,5 +1,5 @@
 /*!
-  \file		lenti_mark.cpp
+  \file		aist_lenti_mark.cpp
   \author	Toshio Ueshiba
 */
 #include <ros/ros.h>
@@ -175,7 +175,7 @@ class LentiMarkNodelet : public nodelet::Nodelet
 void
 LentiMarkNodelet::onInit()
 {
-    NODELET_INFO("lenti_mark::LentiMarkNodelet::onInit(O)");
+    NODELET_INFO("aist_lenti_mark::LentiMarkNodelet::onInit()");
     _node.reset(new LentiMarkNode(getPrivateNodeHandle()));
 }
 
