@@ -29,8 +29,6 @@ class LentiMarkNode
 		LentiMarkNode(const ros::NodeHandle& nh)		;
 		~LentiMarkNode()					{}
 
-    void	run()						const	;
-
   private:
     void	camera_cb(const image_cp& img,
 			  const camera_info_cp& cinfo)			;
@@ -69,12 +67,6 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh)
     else if (_LMT.setMarkerParams(mk_file))
 	throw std::runtime_error("Failed to set marker parameters from file["
 				 + mk_file + ']');
-}
-
-void
-LentiMarkNode::run() const
-{
-    ros::spin();
 }
 
 void
