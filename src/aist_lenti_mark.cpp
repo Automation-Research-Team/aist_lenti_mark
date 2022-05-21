@@ -26,16 +26,21 @@ class LentiMarkNode
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
     
   public:
-		LentiMarkNode(const ros::NodeHandle& nh)		;
+		LentiMarkNode(const ros::NodeHandle& nh,
+			      const std::string& nodelet_name)		;
 		~LentiMarkNode()					{}
 
   private:
     void	camera_cb(const image_cp& img,
 			  const camera_info_cp& cinfo)			;
     void	image_cb(const image_cp& img)				;
-  
+
+    const std::string&
+		getName()	const	{ return _nodelet_name; }
+    
   private:
     ros::NodeHandle			_nh;
+    const std::string			_nodelet_name;
     image_transport::ImageTransport	_it;
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
@@ -45,8 +50,10 @@ class LentiMarkNode
     leag::LentiMarkTracker		_LMT;
 };
 
-LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh)
+LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
+			     const std::string& nodelet_name)
     :_nh(nh),
+     _nodelet_name(nodelet_name),
      _it(_nh),
      _camera_sub(_it.subscribeCamera("/image_raw", 10,
 				     &LentiMarkNode::camera_cb, this)),
@@ -142,11 +149,11 @@ LentiMarkNode::image_cb(const image_cp& img)
 	    _markers_pub.publish(markers);
 	}
 	else
-	    ROS_WARN_STREAM("(lenti_mark) no markers detected.");
+	    NODELET_WARN_STREAM('(' << getName() << ") no markers detected.");
     }
     catch (const std::exception& err)
     {
-	ROS_ERROR_STREAM("(lenti_mark) " << err.what());
+	NODELET_ERROR_STREAM('(' << getName() << ") " << err.what());
     }
 }
 
@@ -168,7 +175,7 @@ void
 LentiMarkNodelet::onInit()
 {
     NODELET_INFO("aist_lenti_mark::LentiMarkNodelet::onInit()");
-    _node.reset(new LentiMarkNode(getPrivateNodeHandle()));
+    _node.reset(new LentiMarkNode(getPrivateNodeHandle(), getName()));
 }
 
 }	// namespace aist_lenti_mark
