@@ -64,7 +64,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh)
 				 + cam_file + ']');
     
     const auto	mk_file = _nh.param<std::string>("mk_param_file", "");
-    if (mk_file != "")
+    if (mk_file == "")
 	throw std::runtime_error("Marker parameter file is not specified!");
     else if (_LMT.setMarkerParams(mk_file))
 	throw std::runtime_error("Failed to set marker parameters from file["
