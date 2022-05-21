@@ -1,0 +1,8 @@
+<library path="lib/libaist_lenti_mark">
+  <class name="aist_lenti_mark/aist_lenti_mark"
+	 type="aist_lenti_mark::LentiMarkNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+    </description>
+  </class>
+</library>

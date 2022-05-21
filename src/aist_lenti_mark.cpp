@@ -2,26 +2,59 @@
   \file		lenti_mark.cpp
   \author	Toshio Ueshiba
 */
-#include "lenti_mark.h"
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <tf/transform_broadcaster.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <lenti_mark/markers.h>
-#include <lenti_mark/marker.h>
+#include <aist_lenti_mark/markers.h>
+#include <aist_lenti_mark/marker.h>
+#include <nodelet/nodelet.h>
+#include <pluginlib/class_list_macros.h>
+#include "LentiMarkTracker.h"
 
-namespace lenti_mark
+namespace aist_lenti_mark
 {
 /************************************************************************
 *  class LentiMarkNode							*
 ************************************************************************/
+class LentiMarkNode
+{
+  public:
+    using image_cp	 = sensor_msgs::ImageConstPtr;
+    using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
+    
+  public:
+		LentiMarkNode(const ros::NodeHandle& nh)		;
+		~LentiMarkNode()					{}
+
+    void	run()						const	;
+
+  private:
+    void	camera_cb(const image_cp& img,
+			  const camera_info_cp& cinfo)			;
+    void	image_cb(const image_cp& img)				;
+  
+  private:
+    ros::NodeHandle			_nh;
+    image_transport::ImageTransport	_it;
+    image_transport::CameraSubscriber	_camera_sub;
+    image_transport::Subscriber		_image_sub;
+    const ros::Publisher		_markers_pub;
+    tf::TransformBroadcaster		_tf_broadcaster;
+
+    leag::LentiMarkTracker		_LMT;
+};
+
 LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh)
     :_nh(nh),
      _it(_nh),
      _camera_sub(_it.subscribeCamera("/image_raw", 10,
-				     &LentiMarkNode::cameraCallback, this)),
+				     &LentiMarkNode::camera_cb, this)),
      _image_sub(_it.subscribe("/image_raw", 10,
-			      &LentiMarkNode::imageCallback, this)),
-     _markers_pub(_nh.advertise<lenti_mark::markers>("lenti_mark", 10)),
+			      &LentiMarkNode::image_cb, this)),
+     _markers_pub(_nh.advertise<aist_lenti_mark::markers>("lenti_mark", 10)),
      _tf_broadcaster(),
      _LMT()
 {
@@ -39,24 +72,24 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh)
 }
 
 void
-LentiMarkNode::run()
+LentiMarkNode::run() const
 {
     ros::spin();
 }
 
 void
-LentiMarkNode::cameraCallback(const image_cp& img, const camera_info_cp& cinfo)
+LentiMarkNode::camera_cb(const image_cp& img, const camera_info_cp& cinfo)
 {
     const cv::Size2i	img_size(cinfo->width, cinfo->height);
     const cv::Mat	cam_matrix( 3, 3, CV_64FC1, (void*)cinfo->K.data());
     const cv::Mat	dist_coeffs(1, 5, CV_64FC1, (void*)cinfo->D.data());
     _LMT.setCamParams(img_size, cam_matrix, dist_coeffs);
     
-    imageCallback(img);
+    image_cb(img);
 }
 
 void
-LentiMarkNode::imageCallback(const image_cp& img)
+LentiMarkNode::image_cb(const image_cp& img)
 {
     try
     {
@@ -83,29 +116,28 @@ LentiMarkNode::imageCallback(const image_cp& img)
 	if (m_data.size() > 0) 
 	{
 	  // Construct a message of marker array.
-	    lenti_mark::markers	markers;
+	    aist_lenti_mark::markers	markers;
 	    markers.header = img->header;
 	    markers.detect = m_data.size();      
 
 	    for (const auto& data : m_data) 
 	    {
 	      // Broadcast transform from marker frame to camera frame.
-		const auto marker_frame_id = "mk_" + std::to_string(data.id);
 		const tf::Transform
 		    transform({data.rot[0], data.rot[1], data.rot[2],
 			       data.rot[3], data.rot[4], data.rot[5],
 			       data.rot[6], data.rot[7], data.rot[8]},
-			      {data.x/1000, data.y/1000, data.z/1000});
+			      {data.x*0.001, data.y*0.001, data.z*0.001});
 		_tf_broadcaster.sendTransform(
 		    tf::StampedTransform(transform, img->header.stamp,
 					 img->header.frame_id,
-					 marker_frame_id));
+					 "mk_" + std::to_string(data.id)));
 
 	      // Construct a marker element and push it into marker array.
 		geometry_msgs::Pose	pose_msg;
 		tf::poseTFToMsg(transform, pose_msg);
 
-		lenti_mark::marker	marker;
+		aist_lenti_mark::marker	marker;
 		marker.id	= data.id;
 		marker.score	= data.score;
 		marker.contrast	= data.contrast;
@@ -126,28 +158,27 @@ LentiMarkNode::imageCallback(const image_cp& img)
     }
 }
 
-}	// namespace lenti_mark
-
 /************************************************************************
-*  global functions							*
+*  class LentiMarkNodelet						*
 ************************************************************************/
-int
-main(int argc, char *argv[])
+class LentiMarkNodelet : public nodelet::Nodelet
 {
-    ros::init(argc, argv, "lenti_mark");
+  public:
+			LentiMarkNodelet()				{}
 
-    try
-    {
-	ros::NodeHandle			nh("~");
-	lenti_mark::LentiMarkNode	node(nh);
+    virtual void	onInit()					;
 
-	node.run();
-    }
-    catch (const std::exception& err)
-    {
-	std::cerr << err.what() << std::endl;
-	return 1;
-    }
+  private:
+    boost::shared_ptr<LentiMarkNode>	_node;
+};
 
-    return 0;
+void
+LentiMarkNodelet::onInit()
+{
+    NODELET_INFO("lenti_mark::LentiMarkNodelet::onInit(O)");
+    _node.reset(new LentiMarkNode(getPrivateNodeHandle()));
 }
+
+}	// namespace aist_lenti_mark
+
+PLUGINLIB_EXPORT_CLASS(aist_lenti_mark::LentiMarkNodelet, nodelet::Nodelet);
