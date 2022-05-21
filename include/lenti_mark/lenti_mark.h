@@ -1,63 +1,44 @@
-//STD
-#include <cstdio>
+/*!
+  \file		lenti_mark.h
+  \author	Toshio Ueshiba
+*/ 
+#pragma once
 
-// ROS
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <tf/transform_broadcaster.h>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// lenti_mark
 #include "LentiMarkTracker.h"
-
-using namespace std;
 
 namespace lenti_mark
 {
-  class LentiMarkNode
-  {
+/************************************************************************
+*  class LentiMarkNode							*
+************************************************************************/
+class LentiMarkNode
+{
   public:
-    LentiMarkNode();
-    ~LentiMarkNode(){};
+    using image_cp	 = sensor_msgs::ImageConstPtr;
+    using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
+    
+  public:
+		LentiMarkNode(const ros::NodeHandle& nh)		;
+		~LentiMarkNode()					{}
 
-    void run(void);
+    void	run();
 
   private:
-    int setParams(void);
-    int detect(void);
+    void	cameraCallback(const image_cp& img,  
+			       const camera_info_cp& cinfo)		;
+    void	imageCallback(const image_cp& img)			;
   
-    void cameraCallback(const sensor_msgs::ImageConstPtr& msg,  
-    const sensor_msgs::CameraInfoConstPtr& info);
-    void imageCallback(const sensor_msgs::ImageConstPtr& msg);
-
   private:
-    leag::LentiMarkTracker LMT;
-    vector<leag::LentiMarkTracker::ResultData> m_data;
+    ros::NodeHandle			_nh;
+    image_transport::ImageTransport	_it;
+    image_transport::CameraSubscriber	_camera_sub;
+    image_transport::Subscriber		_image_sub;
+    const ros::Publisher		_markers_pub;
+    tf::TransformBroadcaster		_tf_broadcaster;
 
-    int camparam_type;
-    string cam_file;
-    string mk_file;
-
-    cv::Mat image;
-    ros::NodeHandle nh;
-    ros::Publisher data_pub;
-    image_transport::CameraSubscriber cam_sub;
-    image_transport::Subscriber img_sub;
-    tf::TransformBroadcaster tf_br;
-
-    cv::Size2i img_size;
-    cv::Mat cam_matrix;
-    cv::Mat dist_coeffs;
-
-    // debug ----------------
-    bool tf_world_flg;
-    double cam_pos_x;
-    double cam_pos_y;
-    double cam_pos_z;
-    // debug ----------------
-  };
-}
-
-
+    leag::LentiMarkTracker		_LMT;
+};
+}	// namespace lenti_mark
