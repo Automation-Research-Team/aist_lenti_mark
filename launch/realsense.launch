@@ -5,8 +5,8 @@
   <arg name="camera_frame"	default="calibrated_$(arg camera_name)"/>
   <arg name="fps"		default="30"/>
   <arg name="cam_param_file"	default=""/>
-  <arg name="mk_param_file"	default="$(dirname
-					 )/../Data/Logicool640480.txt"/>
+  <arg name="mk_param_file"
+       default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
   <arg name="marker_frame"	default="marker_frame"/>
   <arg name="manager"		default=""/>
   <arg name="manager_threads"	default="4"/>

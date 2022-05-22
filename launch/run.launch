@@ -1,8 +1,8 @@
 <launch>
 
   <arg name="cam_param_file"	default=""/>
-  <arg name="mk_param_file"	default="$(dirname
-					 )/../Data/Logicool640480.txt"/>
+  <arg name="mk_param_file"
+       default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
   <arg name="marker_frame"	default="marker_frame"/>
   <arg name="image_topic"	default="/camera/image_raw"/>
   <arg name="manager"		default=""/>
@@ -17,6 +17,7 @@
     <!-- Other parameters -->
     <param name="cam_param_file"	value="$(arg cam_param_file)"/>
     <param name="mk_param_file"		value="$(arg mk_param_file)"/>
+    <param name="marker_frame"		value="$(arg marker_frame)"/>
   </node>
 
 </launch>

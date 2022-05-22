@@ -41,6 +41,7 @@ class LentiMarkNode
   private:
     ros::NodeHandle			_nh;
     const std::string			_nodelet_name;
+    const std::string			_marker_frame;
     image_transport::ImageTransport	_it;
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
@@ -54,6 +55,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
 			     const std::string& nodelet_name)
     :_nh(nh),
      _nodelet_name(nodelet_name),
+     _marker_frame(_nh.param<std::string>("marker_frame", "marker_frame")),
      _it(_nh),
      _camera_sub(_it.subscribeCamera("/image_raw", 10,
 				     &LentiMarkNode::camera_cb, this)),
@@ -130,7 +132,8 @@ LentiMarkNode::image_cb(const image_cp& img)
 		_tf_broadcaster.sendTransform(
 		    tf::StampedTransform(transform, img->header.stamp,
 					 img->header.frame_id,
-					 "mk_" + std::to_string(data.id)));
+					 _marker_frame
+					 + '_' + std::to_string(data.id)));
 
 	      // Construct a marker element and push it into marker array.
 		geometry_msgs::Pose	pose_msg;
