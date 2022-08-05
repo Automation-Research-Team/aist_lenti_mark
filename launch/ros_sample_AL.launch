@@ -1,4 +1,0 @@
-<launch>
-  <include file="$(find lenti_mark)/launch/uvc_camera.launch" />
-  <include file="$(find lenti_mark)/launch/lenti_mark_webcam_AL.launch" />
-</launch>

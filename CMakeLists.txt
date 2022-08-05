@@ -33,8 +33,8 @@ generate_messages(
 )
 
 catkin_package(
-  CATKIN_DEPENDS 
-    roscpp 
+  CATKIN_DEPENDS
+    roscpp
     std_msgs
     message_runtime
     geometry_msgs

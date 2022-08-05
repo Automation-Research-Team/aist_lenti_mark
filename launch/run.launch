@@ -4,15 +4,19 @@
   <arg name="mk_param_file"
        default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
   <arg name="marker_frame"	default="marker_frame"/>
+  <arg name="subscribe_camera"	default="false"/>
   <arg name="image_topic"	default="/camera/image_raw"/>
   <arg name="manager"		default=""/>
-  
+
   <arg if="$(eval manager == '')"	name="command"	value="standalone"/>
   <arg unless="$(eval manager == '')"	name="command"	value="load"/>
-  
+
   <node name="aist_lenti_mark" pkg="nodelet" type="nodelet" output="screen"
   	args="$(arg command) aist_lenti_mark/aist_lenti_mark $(arg manager)">
-    <remap from="/image"		to="$(arg image_topic)"/>
+    <remap if="$(arg subscribe_camera)"
+	   from="/image"		to="$(arg image_topic)"/>
+    <remap unless="$(arg subscribe_camera)"
+	   from="/image_raw"		to="$(arg image_topic)"/>
 
     <!-- Other parameters -->
     <param name="cam_param_file"	value="$(arg cam_param_file)"/>

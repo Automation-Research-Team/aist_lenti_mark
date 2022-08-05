@@ -8,11 +8,10 @@
   <arg name="mk_param_file"
        default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
   <arg name="marker_frame"	default="marker_frame"/>
-  <arg name="manager"		default=""/>
+  <arg name="manager"		default="mgr"/>
   <arg name="manager_threads"	default="4"/>
 
-  <arg name="image_topic"	value="$(arg camera_name
-				       )/aligned_depth_to_color/image_raw"/>
+  <arg name="image_topic"	value="/$(arg camera_name)/color/image_raw"/>
   <node unless="$(eval manager == '')"
 	name="$(arg manager)"
 	pkg ="nodelet" type="nodelet" args="manager" output="screen">
@@ -26,11 +25,11 @@
     <arg name="camera"			value="$(arg camera_name)"/>
     <arg name="tf_prefix"		value="$(arg camera_frame)"/>
     <arg name="publish_tf"		value="true"/>
-    <arg name="enable_depth"		value="true"/>
+    <arg name="enable_depth"		value="false"/>
     <arg name="enable_infra1"		value="false"/>
     <arg name="enable_infra2"		value="false"/>
-    <arg name="ordered_pc"		value="true"/>
-    <arg name="align_depth"		value="true"/>
+    <arg name="ordered_pc"		value="false"/>
+    <arg name="align_depth"		value="false"/>
     <arg name="depth_width"		value="$(arg camera_width)"/>
     <arg name="depth_height"		value="$(arg camera_height)"/>
     <arg name="depth_fps"		value="$(arg fps)"/>
@@ -46,11 +45,12 @@
   </include>
 
   <include file="$(dirname)/run.launch">
-    <arg name="cam_param_file"	value="$(arg cam_param_file)"/>
-    <arg name="mk_param_file"	value="$(arg mk_param_file)"/>
-    <arg name="marker_frame"	value="$(arg marker_frame)"/>
-    <arg name="image_topic"	value="$(arg image_topic)"/>
-    <arg name="manager"		value="$(arg manager)"/>
+    <arg name="cam_param_file"		value="$(arg cam_param_file)"/>
+    <arg name="mk_param_file"		value="$(arg mk_param_file)"/>
+    <arg name="marker_frame"		value="$(arg marker_frame)"/>
+    <arg name="subscribe_camera"	value="true"/>
+    <arg name="image_topic"		value="$(arg image_topic)"/>
+    <arg name="manager"			value="$(arg manager)"/>
   </include>
 
   <node name="$(anon rviz)" pkg="rviz" type="rviz" output="screen"

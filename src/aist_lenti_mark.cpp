@@ -24,7 +24,7 @@ class LentiMarkNode
   public:
     using image_cp	 = sensor_msgs::ImageConstPtr;
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
-    
+
   public:
 		LentiMarkNode(const ros::NodeHandle& nh,
 			      const std::string& nodelet_name)		;
@@ -37,7 +37,7 @@ class LentiMarkNode
 
     const std::string&
 		getName()	const	{ return _nodelet_name; }
-    
+
   private:
     ros::NodeHandle			_nh;
     const std::string			_nodelet_name;
@@ -57,10 +57,13 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
      _nodelet_name(nodelet_name),
      _marker_frame(_nh.param<std::string>("marker_frame", "marker_frame")),
      _it(_nh),
-     _camera_sub(_it.subscribeCamera("/image_raw", 10,
-				     &LentiMarkNode::camera_cb, this)),
-     _image_sub(_it.subscribe("/image_raw", 10,
-			      &LentiMarkNode::image_cb, this)),
+     _camera_sub(_nh.param<bool>("subscribe_camera", false) ?
+		 _it.subscribeCamera("/image", 10,
+				     &LentiMarkNode::camera_cb, this) :
+		 image_transport::CameraSubscriber()),
+     _image_sub(_nh.param<bool>("subscribe_camera", false) ?
+		image_transport::Subscriber() :
+		_it.subscribe("/image_raw", 10, &LentiMarkNode::image_cb, this)),
      _markers_pub(_nh.advertise<aist_lenti_mark::markers>("lenti_mark", 10)),
      _tf_broadcaster(),
      _LMT()
@@ -69,7 +72,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
     if (cam_file != "" && _LMT.setCamParams(cam_file))
 	throw std::runtime_error("Failed to set camera parameters from file["
 				 + cam_file + ']');
-    
+
     const auto	mk_file = _nh.param<std::string>("mk_param_file", "");
     if (mk_file == "")
 	throw std::runtime_error("Marker parameter file is not specified!");
@@ -85,7 +88,7 @@ LentiMarkNode::camera_cb(const image_cp& img, const camera_info_cp& cinfo)
     const cv::Mat	cam_matrix( 3, 3, CV_64FC1, (void*)cinfo->K.data());
     const cv::Mat	dist_coeffs(1, 5, CV_64FC1, (void*)cinfo->D.data());
     _LMT.setCamParams(img_size, cam_matrix, dist_coeffs);
-    
+
     image_cb(img);
 }
 
@@ -114,14 +117,14 @@ LentiMarkNode::image_cb(const image_cp& img)
 	std::vector<leag::LentiMarkTracker::ResultData>	m_data;
 	_LMT.getResult(m_data);
 
-	if (m_data.size() > 0) 
+	if (m_data.size() > 0)
 	{
 	  // Construct a message of marker array.
 	    aist_lenti_mark::markers	markers;
 	    markers.header = img->header;
-	    markers.detect = m_data.size();      
+	    markers.detect = m_data.size();
 
-	    for (const auto& data : m_data) 
+	    for (const auto& data : m_data)
 	    {
 	      // Broadcast transform from marker frame to camera frame.
 		const tf::Transform
@@ -144,7 +147,7 @@ LentiMarkNode::image_cb(const image_cp& img)
 		marker.score	= data.score;
 		marker.contrast	= data.contrast;
 		marker.pose	= pose_msg;
-		
+
 		markers.markers.push_back(marker);
 	    }
 

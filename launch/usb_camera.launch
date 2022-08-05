@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="video_device"	default="/dev/video0"/>
+  <arg name="camera_name"	default="usb_camera"/>
+  <arg name="camera_frame"	default="calibrated_$(arg camera_name)"/>
+  <arg name="fps"		default="30"/>
+  <arg name="cam_param_file"	default=""/>
+  <arg name="mk_param_file"
+       default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
+  <arg name="marker_frame"	default="marker_frame"/>
+  <arg name="manager"		default="mgr"/>
+  <arg name="manager_threads"	default="4"/>
+
+  <arg name="image_topic"	value="/image_raw"/>
+  <node unless="$(eval manager == '')"
+	name="$(arg manager)"
+	pkg ="nodelet" type="nodelet" args="manager" output="screen">
+    <param name="num_worker_threads"	value="$(arg manager_threads)"/>
+  </node>
+
+  <arg name="image_width"	default="640"/>
+  <arg name="image_height"	default="480"/>
+  <arg name="pixel_format"	default="mjpeg"/>
+  <arg name="camera_frame_id"	default="$(arg camera_frame)"/>
+
+  <!-- <node name="$(arg camera_name)" -->
+  <!-- 	pkg="usb_cam" type="usb_cam_node" output="screen"> -->
+  <!--   <param name="video_device"		value="$(arg video_device)"/> -->
+  <!--   <param name="image_width"		value="$(arg image_width)"/> -->
+  <!--   <param name="image_height"		value="$(arg image_height)"/> -->
+  <!--   <param name="pixle_format"		value="$(arg pixel_format)"/> -->
+  <!--   <param name="framerate"		value="$(arg fps)"/> -->
+  <!-- </node> -->
+  <node name="$(arg camera_name)"
+  	pkg="uvc_camera" type="uvc_camera_node" output="screen">
+    <param name="device"		value="$(arg video_device)"/>
+    <param name="width"			value="$(arg image_width)"/>
+    <param name="height"		value="$(arg image_height)"/>
+    <param name="fps"			value="$(arg fps)"/>
+  </node>
+
+  <include file="$(dirname)/run.launch">
+    <arg name="cam_param_file"		value="$(arg cam_param_file)"/>
+    <arg name="mk_param_file"		value="$(arg mk_param_file)"/>
+    <arg name="marker_frame"		value="$(arg marker_frame)"/>
+    <arg name="subscribe_camera"	value="false"/>
+    <arg name="image_topic"		value="$(arg image_topic)"/>
+    <arg name="manager"			value="$(arg manager)"/>
+  </include>
+
+  <node name="$(anon rviz)" pkg="rviz" type="rviz" output="screen"
+	args="-d $(dirname)/$(arg camera_name).rviz"/>
+
+</launch>
