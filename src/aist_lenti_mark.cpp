@@ -4,7 +4,8 @@
 */
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -46,7 +47,7 @@ class LentiMarkNode
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
     const ros::Publisher		_markers_pub;
-    tf::TransformBroadcaster		_tf_broadcaster;
+    tf2_ros::TransformBroadcaster	_broadcaster;
 
     leag::LentiMarkTracker		_LMT;
 };
@@ -65,7 +66,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10, &LentiMarkNode::image_cb, this)),
      _markers_pub(_nh.advertise<aist_lenti_mark::markers>("lenti_mark", 10)),
-     _tf_broadcaster(),
+     _broadcaster(),
      _LMT()
 {
     const auto	cam_file = _nh.param<std::string>("cam_param_file", "");
@@ -79,6 +80,10 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
     else if (_LMT.setMarkerParams(mk_file))
 	throw std::runtime_error("Failed to set marker parameters from file["
 				 + mk_file + ']');
+
+    NODELET_INFO_STREAM('(' << getName()
+			<< ") started with camera parameter file[" << cam_file
+			<< "] and marker parameter file[" << mk_file << ']');
 }
 
 void
@@ -127,20 +132,21 @@ LentiMarkNode::image_cb(const image_cp& img)
 	    for (const auto& data : m_data)
 	    {
 	      // Broadcast transform from marker frame to camera frame.
-		const tf::Transform
-		    transform({data.rot[0], data.rot[1], data.rot[2],
-			       data.rot[3], data.rot[4], data.rot[5],
-			       data.rot[6], data.rot[7], data.rot[8]},
-			      {data.x*0.001, data.y*0.001, data.z*0.001});
-		_tf_broadcaster.sendTransform(
-		    tf::StampedTransform(transform, img->header.stamp,
-					 img->header.frame_id,
-					 _marker_frame
-					 + '_' + std::to_string(data.id)));
+		const tf2::Stamped<tf2::Transform>
+			transform{tf2::Transform{
+				    {data.rot[0], data.rot[1], data.rot[2],
+				     data.rot[3], data.rot[4], data.rot[5],
+				     data.rot[6], data.rot[7], data.rot[8]},
+				    {data.x*0.001, data.y*0.001, data.z*0.001}},
+				  img->header.stamp, img->header.frame_id};
+		auto	transform_msg = tf2::toMsg(transform);
+		transform_msg.child_frame_id = _marker_frame
+					     + '_' + std::to_string(data.id);
+		_broadcaster.sendTransform(transform_msg);
 
 	      // Construct a marker element and push it into marker array.
 		geometry_msgs::Pose	pose_msg;
-		tf::poseTFToMsg(transform, pose_msg);
+		tf2::toMsg(transform, pose_msg);
 
 		aist_lenti_mark::marker	marker;
 		marker.id	= data.id;

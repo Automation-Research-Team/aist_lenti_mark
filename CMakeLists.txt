@@ -9,10 +9,10 @@ find_package(catkin REQUIRED
     roscpp
     cv_bridge
     image_transport
-    std_msgs
     message_generation
     geometry_msgs
-    tf
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 find_package(OpenCV)

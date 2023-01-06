@@ -1,43 +1,38 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="video_device"	default="/dev/video0"/>
   <arg name="camera_name"	default="usb_camera"/>
-  <arg name="camera_frame"	default="calibrated_$(arg camera_name)"/>
-  <arg name="fps"		default="30"/>
-  <arg name="cam_param_file"	default=""/>
+  <arg name="camera_frame"	default="$(arg camera_name)_optical_frame"/>
+  <arg name="cam_param_file"
+       default="$(dirname)/../config/CameraParams/Logicool19201080S.txt"/>
   <arg name="mk_param_file"
-       default="$(dirname)/../Data/MarkerParams/markerPara.yml"/>
+       default="$(dirname)/../config/MarkerParams/marker94Para.yml"/>
   <arg name="marker_frame"	default="marker_frame"/>
   <arg name="manager"		default="mgr"/>
   <arg name="manager_threads"	default="4"/>
 
-  <arg name="image_topic"	value="/image_raw"/>
+  <arg name="image_topic"	value="$(arg camera_name)/image_raw"/>
   <node unless="$(eval manager == '')"
 	name="$(arg manager)"
 	pkg ="nodelet" type="nodelet" args="manager" output="screen">
     <param name="num_worker_threads"	value="$(arg manager_threads)"/>
   </node>
 
-  <arg name="image_width"	default="640"/>
-  <arg name="image_height"	default="480"/>
-  <arg name="pixel_format"	default="mjpeg"/>
+  <arg name="video_device"	default="/dev/video8"/>
+  <arg name="image_width"	default="1920"/>
+  <arg name="image_height"	default="1080"/>
+  <arg name="pixel_format"	default="yuyv"/>
+  <arg name="fps"		default="5"/>
   <arg name="camera_frame_id"	default="$(arg camera_frame)"/>
 
-  <!-- <node name="$(arg camera_name)" -->
-  <!-- 	pkg="usb_cam" type="usb_cam_node" output="screen"> -->
-  <!--   <param name="video_device"		value="$(arg video_device)"/> -->
-  <!--   <param name="image_width"		value="$(arg image_width)"/> -->
-  <!--   <param name="image_height"		value="$(arg image_height)"/> -->
-  <!--   <param name="pixle_format"		value="$(arg pixel_format)"/> -->
-  <!--   <param name="framerate"		value="$(arg fps)"/> -->
-  <!-- </node> -->
   <node name="$(arg camera_name)"
-  	pkg="uvc_camera" type="uvc_camera_node" output="screen">
-    <param name="device"		value="$(arg video_device)"/>
-    <param name="width"			value="$(arg image_width)"/>
-    <param name="height"		value="$(arg image_height)"/>
-    <param name="fps"			value="$(arg fps)"/>
+  	pkg="usb_cam" type="usb_cam_node" output="screen">
+    <param name="video_device"		value="$(arg video_device)"/>
+    <param name="image_width"		value="$(arg image_width)"/>
+    <param name="image_height"		value="$(arg image_height)"/>
+    <param name="pixle_format"		value="$(arg pixel_format)"/>
+    <param name="framerate"		value="$(arg fps)"/>
+    <param name="camera_frame_id"	value="$(arg camera_frame)"/>
   </node>
 
   <include file="$(dirname)/run.launch">

@@ -3,9 +3,7 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /Image1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 325
   - Class: rviz/Selection
@@ -54,7 +52,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /image_raw
+      Image Topic: /usb_camera/image_raw
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -64,11 +62,31 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        marker_frame_202:
+          Value: true
+        usb_camera_optical_frame:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        usb_camera_optical_frame:
+          marker_frame_202:
+            {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: usb_camera_frame
+    Fixed Frame: usb_camera_optical_frame
     Frame Rate: 30
   Name: root
   Tools:
@@ -131,4 +149,4 @@ Window Geometry:
     collapsed: true
   Width: 1614
   X: 276
-  Y: 66
+  Y: 27
