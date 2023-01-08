@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
+  <arg name="node"		default="aist_lenti_mark"/>
   <arg name="camera_name"	default="realsense"/>
   <arg name="camera_frame"	default="calibrated_$(arg camera_name)"/>
   <arg name="fps"		default="30"/>
@@ -45,6 +46,7 @@
   </include>
 
   <include file="$(dirname)/run.launch">
+    <arg name="node"			value="$(arg node)"/>
     <arg name="cam_param_file"		value="$(arg cam_param_file)"/>
     <arg name="mk_param_file"		value="$(arg mk_param_file)"/>
     <arg name="marker_frame"		value="$(arg marker_frame)"/>

@@ -6,3 +6,12 @@
     </description>
   </class>
 </library>
+
+<library path="lib/libget_screen_corners">
+  <class name="aist_lenti_mark/get_screen_corners"
+	 type="aist_lenti_mark::GetScreenCornersNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+    </description>
+  </class>
+</library>

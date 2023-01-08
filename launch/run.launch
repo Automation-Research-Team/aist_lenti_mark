@@ -1,5 +1,6 @@
 <launch>
 
+  <arg name="node"		default="aist_lenti_mark"/>
   <arg name="cam_param_file"	default=""/>
   <arg name="mk_param_file"
        default="$(dirname)/../config/MarkerParams/markerPara.yml"/>
@@ -11,8 +12,8 @@
   <arg if="$(eval manager == '')"	name="command"	value="standalone"/>
   <arg unless="$(eval manager == '')"	name="command"	value="load"/>
 
-  <node name="aist_lenti_mark" pkg="nodelet" type="nodelet" output="screen"
-  	args="$(arg command) aist_lenti_mark/aist_lenti_mark $(arg manager)">
+  <node name="$(arg node)" pkg="nodelet" type="nodelet" output="screen"
+  	args="$(arg command) aist_lenti_mark/$(arg node) $(arg manager)">
     <remap if="$(arg subscribe_camera)"
 	   from="/image"		to="$(arg image_topic)"/>
     <remap unless="$(arg subscribe_camera)"

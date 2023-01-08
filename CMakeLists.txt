@@ -67,9 +67,24 @@ target_link_libraries(${PROJECT_NAME}
   ${LEAG_LIBS}
 )
 
+add_library(get_screen_corners
+  src/get_screen_corners.cpp
+)
+
+add_dependencies(get_screen_corners
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+target_link_libraries(get_screen_corners
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${LEAG_LIBS}
+)
+
 install(
   TARGETS
-    ${PROJECT_NAME}
+    ${PROJECT_NAME} get_screen_corners
   ARCHIVE
     DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY

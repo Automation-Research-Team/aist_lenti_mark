@@ -49,7 +49,7 @@ class LentiMarkNode
     const ros::Publisher		_markers_pub;
     tf2_ros::TransformBroadcaster	_broadcaster;
 
-    leag::LentiMarkTracker		_LMT;
+    leag::LentiMarkTracker		_tracker;
 };
 
 LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
@@ -67,17 +67,17 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
 		_it.subscribe("/image_raw", 10, &LentiMarkNode::image_cb, this)),
      _markers_pub(_nh.advertise<aist_lenti_mark::markers>("lenti_mark", 10)),
      _broadcaster(),
-     _LMT()
+     _tracker()
 {
     const auto	cam_file = _nh.param<std::string>("cam_param_file", "");
-    if (cam_file != "" && _LMT.setCamParams(cam_file))
+    if (cam_file != "" && _tracker.setCamParams(cam_file))
 	throw std::runtime_error("Failed to set camera parameters from file["
 				 + cam_file + ']');
 
     const auto	mk_file = _nh.param<std::string>("mk_param_file", "");
     if (mk_file == "")
 	throw std::runtime_error("Marker parameter file is not specified!");
-    else if (_LMT.setMarkerParams(mk_file))
+    else if (_tracker.setMarkerParams(mk_file))
 	throw std::runtime_error("Failed to set marker parameters from file["
 				 + mk_file + ']');
 
@@ -92,7 +92,7 @@ LentiMarkNode::camera_cb(const image_cp& img, const camera_info_cp& cinfo)
     const cv::Size2i	img_size(cinfo->width, cinfo->height);
     const cv::Mat	cam_matrix( 3, 3, CV_64FC1, (void*)cinfo->K.data());
     const cv::Mat	dist_coeffs(1, 5, CV_64FC1, (void*)cinfo->D.data());
-    _LMT.setCamParams(img_size, cam_matrix, dist_coeffs);
+    _tracker.setCamParams(img_size, cam_matrix, dist_coeffs);
 
     image_cb(img);
 }
@@ -115,12 +115,12 @@ LentiMarkNode::image_cb(const image_cp& img)
 				     + std::to_string(image.rows) + ']');
 
       // Detect markers.
-	if (_LMT.detect(image) < 0)
+	if (_tracker.detect(image) < 0)
 	    throw std::runtime_error("LentiMarkTracker::detect() failed.");
 
       // Get marker detection results.
 	std::vector<leag::LentiMarkTracker::ResultData>	m_data;
-	_LMT.getResult(m_data);
+	_tracker.getResult(m_data);
 
 	if (m_data.size() > 0)
 	{

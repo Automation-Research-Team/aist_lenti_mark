@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
+  <arg name="node"		default="aist_lenti_mark"/>
   <arg name="camera_name"	default="usb_camera"/>
   <arg name="camera_frame"	default="$(arg camera_name)_optical_frame"/>
   <arg name="cam_param_file"
@@ -23,7 +24,6 @@
   <arg name="image_height"	default="1080"/>
   <arg name="pixel_format"	default="yuyv"/>
   <arg name="fps"		default="5"/>
-  <arg name="camera_frame_id"	default="$(arg camera_frame)"/>
 
   <node name="$(arg camera_name)"
   	pkg="usb_cam" type="usb_cam_node" output="screen">
@@ -36,6 +36,7 @@
   </node>
 
   <include file="$(dirname)/run.launch">
+    <arg name="node"			value="$(arg node)"/>
     <arg name="cam_param_file"		value="$(arg cam_param_file)"/>
     <arg name="mk_param_file"		value="$(arg mk_param_file)"/>
     <arg name="marker_frame"		value="$(arg marker_frame)"/>
