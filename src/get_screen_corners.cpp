@@ -10,7 +10,7 @@
 #include <aist_lenti_mark/markers.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
-#include "LentiMarkTracker.h"
+#include <LentiMarkTracker.h>
 
 namespace aist_lenti_mark
 {

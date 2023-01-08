@@ -7,13 +7,10 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <aist_lenti_mark/markers.h>
-#include <aist_lenti_mark/marker.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
-#include "LentiMarkTracker.h"
+#include <LentiMarkTracker.h>
 
 namespace aist_lenti_mark
 {
