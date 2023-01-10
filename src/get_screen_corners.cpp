@@ -11,9 +11,36 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
+#include <visualization_msgs/Marker.h>
 
 namespace aist_lenti_mark
 {
+static geometry_msgs::Point
+toMsg(const cv::Point3f& p)
+{
+    geometry_msgs::Point	point;
+    point.x = p.x;
+    point.y = p.y;
+    point.z = p.z;
+    
+    return point;
+}
+
+static geometry_msgs::Pose
+identity()
+{
+    geometry_msgs::Pose	pose;
+    pose.position.x    = 0;
+    pose.position.y    = 0;
+    pose.position.z    = 0;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+    pose.orientation.w = 1;
+
+    return pose;
+}
+    
 /************************************************************************
 *  class GetScreenCornersNode						*
 ************************************************************************/
@@ -22,6 +49,7 @@ class GetScreenCornersNode
   private:
     using image_cp	 = sensor_msgs::ImageConstPtr;
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
+    using vis_marker_t	 = visualization_msgs::Marker;
     
   public:
 		GetScreenCornersNode(const ros::NodeHandle& nh,
@@ -52,6 +80,7 @@ class GetScreenCornersNode
     image_transport::ImageTransport	_it;
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
+    const ros::Publisher		_vis_marker_pub;
     tf2_ros::TransformBroadcaster	_broadcaster;
     leag::LentiMarkTracker		_tracker;
 };
@@ -71,6 +100,7 @@ GetScreenCornersNode::GetScreenCornersNode(const ros::NodeHandle& nh,
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10,
 			      &GetScreenCornersNode::image_cb, this)),
+     _vis_marker_pub(_nh.advertise<vis_marker_t>("marker", 1)),
      _broadcaster(),
      _tracker()
 {
@@ -109,7 +139,7 @@ GetScreenCornersNode::image_cb(const image_cp& img)
     try
     {
 	using namespace	sensor_msgs;
-
+	
       // Convert the input image message to cv::Mat.
 	const auto image = cv_bridge::toCvShare(img, image_encodings::BGR8)
 			 ->image;
@@ -141,19 +171,40 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 						     marker_pos, marker_rot,
 						     image.cols, image.rows);
 						     
-
-      // Broadcast transform from camera frame.to marker frame.
+      // Broadcast transform from camera frame to marker frame.
 	const tf2::Stamped<tf2::Transform>
 	    transform{tf2::Transform{
 			{marker_rot(0, 0), marker_rot(0, 1), marker_rot(0, 2),
 			 marker_rot(1, 0), marker_rot(1, 1), marker_rot(1, 2),
 			 marker_rot(2, 0), marker_rot(2, 1), marker_rot(2, 2)},
-			{marker_pos.x, marker_pos.x, marker_pos.x}}.inverse(),
+			{marker_pos.x, marker_pos.y, marker_pos.z}}.inverse(),
 			img->header.stamp,
 			_marker_frame + '_' + std::to_string(data.id)};
 	auto transform_msg = tf2::toMsg(transform);
 	transform_msg.child_frame_id = img->header.frame_id;
 	_broadcaster.sendTransform(transform_msg);
+
+      // Create visualization marker.
+	vis_marker_t	vis_marker;
+	vis_marker.header	= transform_msg.header;
+	vis_marker.ns		= "vis_marker";
+	vis_marker.id		= 0;
+	vis_marker.type		= vis_marker_t::LINE_STRIP;
+	vis_marker.action	= vis_marker_t::ADD;
+	vis_marker.pose		= identity();
+	vis_marker.scale.x	= 0.005;
+	vis_marker.color.r	= 1.0;
+	vis_marker.color.g	= 1.0;
+	vis_marker.color.b	= 0.0;
+	vis_marker.color.a	= 1.0;
+	vis_marker.lifetime	= ros::Duration(0.0);
+	vis_marker.frame_locked	= false;
+	
+	for (const auto& corner : corners)
+	    vis_marker.points.push_back(toMsg(corner));
+	vis_marker.points.push_back(toMsg(corners[0]));
+
+	_vis_marker_pub.publish(vis_marker);
     }
     catch (const std::exception& err)
     {
@@ -188,6 +239,7 @@ GetScreenCornersNode::get_point_on_screen(int marker_id,
     _tracker.getPositionOnMarkerPlane(marker_id, image_point, screen_point);
 
   // Scale the 3D point so that it lies on the screen.
+    screen_point *= 0.001;	// milimeters => meters
     screen_point *= (1.0f + _screen_offset/marker_rot.col(2).dot(screen_point));
     
   // Transform the screen point to the marker corrdinate frame.

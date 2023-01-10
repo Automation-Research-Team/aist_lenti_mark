@@ -11,6 +11,7 @@ find_package(catkin REQUIRED
     image_transport
     message_generation
     geometry_msgs
+    visualization_msgs
     tf2_ros
     tf2_geometry_msgs
 )

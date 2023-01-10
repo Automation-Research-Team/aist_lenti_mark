@@ -3,7 +3,8 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
       Splitter Ratio: 0.5
     Tree Height: 325
   - Class: rviz/Selection
@@ -77,16 +78,24 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        usb_camera_optical_frame:
-          marker_frame_202:
+        marker_frame_202:
+          usb_camera_optical_frame:
             {}
       Update Interval: 0
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /get_screen_corners/marker
+      Name: Marker
+      Namespaces:
+        vis_marker: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: usb_camera_optical_frame
+    Fixed Frame: marker_frame_202
     Frame Rate: 30
   Name: root
   Tools:
@@ -110,7 +119,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.543999671936035
+      Distance: 3.074294090270996
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -125,10 +134,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7803980112075806
+      Pitch: 0.38479745388031006
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785398006439209
+      Yaw: 4.948566436767578
     Saved: ~
 Window Geometry:
   Displays:
