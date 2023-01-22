@@ -3,19 +3,7 @@
   \author	Toshio Ueshiba
 */
 #include <OGRE/OgreMaterialManager.h>
-#include <OGRE/OgreMovableObject.h>
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreSceneNode.h>
 #include <cv_bridge/cv_bridge.h>
-#include <rviz/display_context.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/ros_topic_property.h>
-#include <rviz/properties/tf_frame_property.h>
-#include <rviz/robot/robot.h>
-#include <rviz/robot/tf_link_updater.h>
-#include <rviz/validate_floats.h>
-#include <rviz/view_manager.h>
-#include <rviz/visualization_manager.h>
 #include <sensor_msgs/image_encodings.h>
 #include "textured_quad_display.h"
 
@@ -49,9 +37,6 @@ TexturedQuadDisplay::TexturedQuadDisplay()
 				      aist_lenti_mark::QuadStamped>()),
 			      "Quad topic to subscribe to.",
 			      this, SLOT(updateDisplayImages()))),
-     mesh_node_(),
-     manual_object_(),
-     mesh_material_(),
      texture_(new ROSImageTexture())
 {
 }
@@ -101,14 +86,13 @@ TexturedQuadDisplay::update(float wall_dt, float ros_dt)
 		updateCamera();
 	    }
 	}
+
+	setStatus(StatusProperty::Ok, "Display Image", "ok");
     }
     catch (const std::exception& e)
     {
 	setStatus(StatusProperty::Error, "Display Image", e.what());
-	return;
     }
-
-    setStatus(StatusProperty::Ok, "Display Image", "ok");
 }
 
 void
@@ -127,9 +111,7 @@ void
 TexturedQuadDisplay::subscribe()
 {
     if (!isEnabled())
-    {
 	return;
-    }
 
     if (!image_topic_property_->getTopic().isEmpty())
     {
@@ -296,7 +278,7 @@ TexturedQuadDisplay::updateCamera()
     pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
     pass->setDepthBias(1);
 
-    const auto	tex_state = pass->createTextureUnitState();  // "Decal.png");
+    const auto	tex_state = pass->createTextureUnitState();
     tex_state->setTextureName(texture_->getTexture()->getName());
     tex_state->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
     tex_state->setTextureFiltering(Ogre::FO_POINT, Ogre::FO_LINEAR,

@@ -8,15 +8,11 @@
 
 #ifndef Q_MOC_RUN
 #  include <mutex>
-#  include <sensor_msgs/Image.h>
-#  include <OGRE/OgreEntity.h>
-#  include <OGRE/OgreManualObject.h>
-#  include <OGRE/OgreRenderQueueListener.h>
-#  include <OGRE/OgreRenderSystem.h>
 #  include <OGRE/OgreRenderTargetListener.h>
-#  include <OGRE/OgreRenderWindow.h>
+#  include <OGRE/OgreRenderQueueListener.h>
 #  include <OGRE/OgreRoot.h>
 #  include <OGRE/OgreSceneNode.h>
+#  include <OGRE/OgreManualObject.h>
 #  include <OGRE/OgreVector3.h>
 #  include <OGRE/OgreWindowEventUtilities.h>
 #  include <rviz/display.h>
@@ -26,20 +22,8 @@
 #  include <aist_lenti_mark/QuadStamped.h>
 #endif  // Q_MOC_RUN
 
-namespace Ogre
-{
-class Entity;
-class SceneNode;
-class ManualObject;
-}
-
 namespace rviz
 {
-class FloatProperty;
-class RenderPanel;
-class RosTopicProperty;
-class TfFrameProperty;
-
 /************************************************************************
 *  class TexturedQuadDisplay						*
 ************************************************************************/
@@ -89,10 +73,10 @@ class TexturedQuadDisplay: public rviz::Display,
     image_cp				cur_image_;
     quad_cp				cur_quad_;
 
+    std::unique_ptr<ROSImageTexture>	texture_;
     std::unique_ptr<Ogre::SceneNode>	mesh_node_;
     std::unique_ptr<Ogre::ManualObject>	manual_object_;
     Ogre::MaterialPtr			mesh_material_;
-    std::unique_ptr<ROSImageTexture>	texture_;
 
     std::mutex				image_mutex_;
     std::mutex				quad_mutex_;
