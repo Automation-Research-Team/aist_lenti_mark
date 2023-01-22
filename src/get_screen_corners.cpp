@@ -192,9 +192,9 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 	quad_t	quad;
 	quad.header	  = transform_msg.header;
 	quad.top_left	  = toMsg(corners[0]);
-	quad.top_right	  = toMsg(corners[1]);
-	quad.bottom_left  = toMsg(corners[2]);
-	quad.bottom_right = toMsg(corners[3]);
+	quad.bottom_left  = toMsg(corners[1]);
+	quad.bottom_right = toMsg(corners[2]);
+	quad.top_right	  = toMsg(corners[3]);
 	_quad_pub.publish(quad);
 
       // Create and publish visualization marker.
@@ -234,11 +234,11 @@ GetScreenCornersNode::get_screen_corners(int marker_id,
     return {get_point_on_screen(marker_id, marker_pos, marker_rot,
 				cv::Point2f(0, 0)),
 	    get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(image_width, 0)),
+				cv::Point2f(0, image_height)),
 	    get_point_on_screen(marker_id, marker_pos, marker_rot,
 				cv::Point2f(image_width, image_height)),
 	    get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(0, image_height))};
+				cv::Point2f(image_width, 0))};
 }
 
 cv::Point3f
