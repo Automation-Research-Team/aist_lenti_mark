@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="dev"		default="/dev/video4"/>
+  <arg name="camera_width"	default="640"/>
+  <arg name="camera_height"	default="480"/>
+  <arg name="camera_frame"	default="live_camera_optical_frame"/>
+  <arg name="marker_frame"	default="marker_frame"/>
+  <arg name="fps"		default="30"/>
+
+  <!-- Start live camera -->
+  <node name="live_camera"
+  	pkg="usb_cam" type="usb_cam_node" output="screen">
+    <param name="video_device"		value="$(arg dev)"/>
+    <param name="image_width"		value="$(arg camera_width)"/>
+    <param name="image_height"		value="$(arg camera_height)"/>
+    <param name="camera_frame_id"	value="$(arg camera_frame)"/>
+    <param name="framerate"		value="$(arg fps)"/>
+    <param name="pixel_format"		value="yuyv"/>
+  </node>
+
+  <node name="quad_generator"
+	pkg="aist_lenti_mark" type="quad_generator.py" output="screen">
+    <param name="frame"		value="$(arg marker_frame)"/>
+  </node>
+
+  <node name="quad_broadcaster"
+	pkg="tf" type="static_transform_publisher"
+	args="0.0 0.0 1.0 0.0 0.0 0.5 $(arg camera_frame) $(arg marker_frame) 30"/>
+
+  <node name="rviz_textured_quads"
+	pkg="rviz" type="rviz" output="screen"
+	args="-d $(dirname)/usb_cam.rviz"/>
+
+</launch>

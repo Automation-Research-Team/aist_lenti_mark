@@ -14,9 +14,18 @@ find_package(catkin REQUIRED
     visualization_msgs
     tf2_ros
     tf2_geometry_msgs
+    rviz
 )
 
 find_package(OpenCV)
+
+set(CMAKE_AUTOMOC ON)
+find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED
+  Core
+  Widgets
+)
+set(QT_LIBRARIES Qt5::Widgets)
+add_definitions(-DQT_NO_KEYWORDS)
 
 set(LEAG_INCLUDE_DIRS "/usr/local/include/leag/")
 set(LEAG_LIBS "/usr/local/lib/leag/libLentiMarkTracker.so")
@@ -25,6 +34,7 @@ add_message_files(
   FILES
     marker.msg
     markers.msg
+    QuadStamped.msg
 )
 
 generate_messages(
@@ -48,6 +58,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${LEAG_INCLUDE_DIRS}
+  ${rviz_INCLUDE_DIRS}
 )
 
 message("-- LEAG_LIBS: ${LEAG_LIBS}")
@@ -83,9 +94,24 @@ target_link_libraries(get_screen_corners
   ${LEAG_LIBS}
 )
 
+add_library(textured_quad_display
+  src/textured_quad_display.cpp
+)
+
+add_dependencies(textured_quad_display
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+target_link_libraries(textured_quad_display
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${QT_LIBRARIES}
+)
+
 install(
   TARGETS
-    ${PROJECT_NAME} get_screen_corners
+    ${PROJECT_NAME} get_screen_corners textured_quad_display
   ARCHIVE
     DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY

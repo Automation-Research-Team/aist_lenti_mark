@@ -8,6 +8,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
 #include <aist_lenti_mark/markers.h>
+#include <aist_lenti_mark/QuadStamped.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
@@ -22,7 +23,7 @@ toMsg(const cv::Point3f& p)
     point.x = p.x;
     point.y = p.y;
     point.z = p.z;
-    
+
     return point;
 }
 
@@ -40,7 +41,7 @@ identity()
 
     return pose;
 }
-    
+
 /************************************************************************
 *  class GetScreenCornersNode						*
 ************************************************************************/
@@ -50,7 +51,8 @@ class GetScreenCornersNode
     using image_cp	 = sensor_msgs::ImageConstPtr;
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
     using vis_marker_t	 = visualization_msgs::Marker;
-    
+    using quad_t	 = QuadStamped;
+
   public:
 		GetScreenCornersNode(const ros::NodeHandle& nh,
 				     const std::string& nodelet_name)	;
@@ -80,6 +82,7 @@ class GetScreenCornersNode
     image_transport::ImageTransport	_it;
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
+    const ros::Publisher		_quad_pub;
     const ros::Publisher		_vis_marker_pub;
     tf2_ros::TransformBroadcaster	_broadcaster;
     leag::LentiMarkTracker		_tracker;
@@ -100,6 +103,7 @@ GetScreenCornersNode::GetScreenCornersNode(const ros::NodeHandle& nh,
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10,
 			      &GetScreenCornersNode::image_cb, this)),
+     _quad_pub(_nh.advertise<quad_t>("quad", 1)),
      _vis_marker_pub(_nh.advertise<vis_marker_t>("marker", 1)),
      _broadcaster(),
      _tracker()
@@ -139,7 +143,7 @@ GetScreenCornersNode::image_cb(const image_cp& img)
     try
     {
 	using namespace	sensor_msgs;
-	
+
       // Convert the input image message to cv::Mat.
 	const auto image = cv_bridge::toCvShare(img, image_encodings::BGR8)
 			 ->image;
@@ -170,7 +174,7 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 	const auto	corners = get_screen_corners(data.id,
 						     marker_pos, marker_rot,
 						     image.cols, image.rows);
-						     
+
       // Broadcast transform from camera frame to marker frame.
 	const tf2::Stamped<tf2::Transform>
 	    transform{tf2::Transform{
@@ -184,7 +188,16 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 	transform_msg.child_frame_id = img->header.frame_id;
 	_broadcaster.sendTransform(transform_msg);
 
-      // Create visualization marker.
+      // Create and publish quad
+	quad_t	quad;
+	quad.header	  = transform_msg.header;
+	quad.top_left	  = toMsg(corners[0]);
+	quad.top_right	  = toMsg(corners[1]);
+	quad.bottom_left  = toMsg(corners[2]);
+	quad.bottom_right = toMsg(corners[3]);
+	_quad_pub.publish(quad);
+
+      // Create and publish visualization marker.
 	vis_marker_t	vis_marker;
 	vis_marker.header	= transform_msg.header;
 	vis_marker.ns		= "vis_marker";
@@ -199,7 +212,7 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 	vis_marker.color.a	= 1.0;
 	vis_marker.lifetime	= ros::Duration(0.0);
 	vis_marker.frame_locked	= false;
-	
+
 	for (const auto& corner : corners)
 	    vis_marker.points.push_back(toMsg(corner));
 	vis_marker.points.push_back(toMsg(corners[0]));
@@ -241,7 +254,7 @@ GetScreenCornersNode::get_point_on_screen(int marker_id,
   // Scale the 3D point so that it lies on the screen.
     screen_point *= 0.001;	// milimeters => meters
     screen_point *= (1.0f + _screen_offset/marker_rot.col(2).dot(screen_point));
-    
+
   // Transform the screen point to the marker corrdinate frame.
     return marker_rot.t() * (screen_point - marker_pos);
 }
