@@ -7,7 +7,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
-#include <aist_lenti_mark/markers.h>
+#include <aist_lenti_mark/Markers.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
@@ -62,7 +62,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
      _image_sub(_nh.param<bool>("subscribe_camera", false) ?
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10, &LentiMarkNode::image_cb, this)),
-     _markers_pub(_nh.advertise<aist_lenti_mark::markers>("lenti_mark", 10)),
+     _markers_pub(_nh.advertise<Markers>("lenti_mark", 10)),
      _broadcaster(),
      _tracker()
 {
@@ -122,7 +122,7 @@ LentiMarkNode::image_cb(const image_cp& img)
 	if (m_data.size() > 0)
 	{
 	  // Construct a message of marker array.
-	    aist_lenti_mark::markers	markers;
+	    Markers	markers;
 	    markers.header = img->header;
 	    markers.detect = m_data.size();
 
@@ -145,7 +145,7 @@ LentiMarkNode::image_cb(const image_cp& img)
 		geometry_msgs::Pose	pose_msg;
 		tf2::toMsg(transform, pose_msg);
 
-		aist_lenti_mark::marker	marker;
+		Marker	marker;
 		marker.id	= data.id;
 		marker.score	= data.score;
 		marker.contrast	= data.contrast;

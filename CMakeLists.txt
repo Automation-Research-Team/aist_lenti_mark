@@ -32,8 +32,8 @@ set(LEAG_LIBS "/usr/local/lib/leag/libLentiMarkTracker.so")
 
 add_message_files(
   FILES
-    marker.msg
-    markers.msg
+    Marker.msg
+    Markers.msg
     QuadStamped.msg
 )
 

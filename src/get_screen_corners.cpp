@@ -7,7 +7,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
-#include <aist_lenti_mark/markers.h>
+#include <aist_lenti_mark/Markers.h>
 #include <aist_lenti_mark/QuadStamped.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
