@@ -26,15 +26,13 @@ TexturedQuadDisplay::TexturedQuadDisplay()
      image_topic_property_(new RosTopicProperty(
 			       "Image Topic", "",
 			       QString::fromStdString(
-				   ros::message_traits::datatype<
-				       sensor_msgs::Image>()),
+				   ros::message_traits::datatype<image_t>()),
 			       "Image topic to subscribe to.",
 			       this, SLOT(updateDisplayImages()))),
      quad_topic_property_(new RosTopicProperty(
 			      "Quad Topic", "",
 			      QString::fromStdString(
-				  ros::message_traits::datatype<
-				      aist_lenti_mark::QuadStamped>()),
+				  ros::message_traits::datatype<quad_t>()),
 			      "Quad topic to subscribe to.",
 			      this, SLOT(updateDisplayImages()))),
      texture_(new ROSImageTexture())

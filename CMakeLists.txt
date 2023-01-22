@@ -7,13 +7,12 @@ add_compile_options(-D _CODE)
 find_package(catkin REQUIRED
   COMPONENTS
     roscpp
+    rospy
     cv_bridge
-    image_transport
     message_generation
-    geometry_msgs
-    visualization_msgs
     tf2_ros
     tf2_geometry_msgs
+    visualization_msgs
     rviz
 )
 
@@ -46,11 +45,11 @@ generate_messages(
 catkin_package(
   CATKIN_DEPENDS
     roscpp
-    std_msgs
     message_runtime
-    geometry_msgs
     pluginlib
     nodelet
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 

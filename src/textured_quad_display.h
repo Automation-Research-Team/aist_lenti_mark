@@ -48,7 +48,9 @@ class TexturedQuadDisplay: public rviz::Display,
     virtual void	unsubscribe()					;
 
   private:
+    using image_t  = sensor_msgs::Image;
     using image_cp = sensor_msgs::Image::ConstPtr;
+    using quad_t   = aist_lenti_mark::QuadStamped;
     using quad_cp  = aist_lenti_mark::QuadStampedConstPtr;
 
     void		updateImage(const image_cp& image)		;
