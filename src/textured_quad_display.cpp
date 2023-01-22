@@ -30,6 +30,9 @@ fromMsg(const geometry_msgs::Point& p)
 /************************************************************************
 *  class TexturedQuadDisplay						*
 ************************************************************************/
+/*
+ *  public member functions
+ */
 TexturedQuadDisplay::TexturedQuadDisplay()
     :Display(),
      image_topic_property_(new RosTopicProperty(
@@ -197,7 +200,7 @@ TexturedQuadDisplay::createTexture()
 void
 TexturedQuadDisplay::createMesh()
 {
-  // create our scenenode and material
+  // Create our scene node and material if not created yet.
     if (!mesh_node_)
     {
 	const Ogre::String	resource_group_name = "MeshNode";
@@ -215,6 +218,7 @@ TexturedQuadDisplay::createMesh()
 	mesh_node_.reset(this->scene_node_->createChildSceneNode());
     }
 
+  // Create our manual object if not created yet.
     if (!manual_object_)
     {
 	manual_object_.reset(context_->getSceneManager()
@@ -222,32 +226,35 @@ TexturedQuadDisplay::createMesh()
 	mesh_node_->attachObject(manual_object_.get());
     }
 
-  // Lookup transform into fixed frame
+  // Transform corner points of the quad into the RViz frame.
     Ogre::Vector3	points[4];
     {
 	std::lock_guard<std::mutex>	lock(quad_mutex_);
 
+      // Get a transform from the frame reprenting the quad to the RViz frame.
 	Ogre::Vector3		position;
 	Ogre::Quaternion	orientation;
 	if (!context_->getFrameManager()
 		     ->getTransform(cur_quad_->header.frame_id,
 				    ros::Time(0), position, orientation))
 	    throw std::runtime_error("Error transforming from fixed frame to frame " + cur_quad_->header.frame_id);
-
 	Ogre::Matrix4	transform;
 	transform.makeTransform(position, Ogre::Vector3(1.0, 1.0, 1.0),
 				orientation);
 
+      // Transform corner potins.
 	points[0] = transform.transformAffine(fromMsg(cur_quad_->top_left));
 	points[1] = transform.transformAffine(fromMsg(cur_quad_->bottom_left));
 	points[2] = transform.transformAffine(fromMsg(cur_quad_->bottom_right));
 	points[3] = transform.transformAffine(fromMsg(cur_quad_->top_right));
     }
 
+  // Compute normal of the quad.
     auto	normal = (points[1] - points[0])
 			.crossProduct(points[2] - points[1]);
     normal.normalise();
 
+  // Add corner positions as welll as normals and texture coordinates.
     manual_object_->clear();
     manual_object_->estimateVertexCount(4);
     manual_object_->begin(mesh_material_->getName(),

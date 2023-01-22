@@ -1,5 +1,5 @@
 /*!
-  \file		aist_lenti_mark.cpp
+  \file		get_screen_corners.cpp
   \author	Toshio Ueshiba
 */
 #include <ros/ros.h>
