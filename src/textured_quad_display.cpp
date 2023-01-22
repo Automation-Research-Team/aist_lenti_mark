@@ -291,9 +291,6 @@ TexturedQuadDisplay::updateMeshProperties()
 void
 TexturedQuadDisplay::updateCamera()
 {
-    if (!mesh_node_ || mesh_material_.isNull())
-	return;
-
     const auto	pass = mesh_material_->getTechnique(0)->createPass();
 
     pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
