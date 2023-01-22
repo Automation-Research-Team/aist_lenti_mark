@@ -48,7 +48,11 @@ TexturedQuadDisplay::TexturedQuadDisplay()
 				  ros::message_traits::datatype<
 				      aist_lenti_mark::QuadStamped>()),
 			      "Quad topic to subscribe to.",
-			      this, SLOT(updateDisplayImages())))
+			      this, SLOT(updateDisplayImages()))),
+     mesh_node_(),
+     manual_object_(),
+     mesh_material_(),
+     texture_(new ROSImageTexture())
 {
 }
 
@@ -192,17 +196,20 @@ TexturedQuadDisplay::createTexture()
 
     const auto	img = cv_bridge::toCvCopy(*cur_image_,
 					  sensor_msgs::image_encodings::RGBA8);
-    if (!texture_)
-	texture_.reset(new ROSImageTexture());
     texture_->addMessage(img->toImageMsg());
 }
 
 void
 TexturedQuadDisplay::createMesh()
 {
-  // Create our scene node and material if not created yet.
+  // Create mesh node, mesh material and manual object if not created yet.
     if (!mesh_node_)
     {
+	mesh_node_.reset(scene_node_->createChildSceneNode());
+	manual_object_.reset(context_->getSceneManager()
+				     ->createManualObject("MeshObject"));
+	mesh_node_->attachObject(manual_object_.get());
+
 	const Ogre::String	resource_group_name = "MeshNode";
 
 	if (auto&& rg_mgr = Ogre::ResourceGroupManager::getSingleton();
@@ -214,16 +221,6 @@ TexturedQuadDisplay::createMesh()
 				resource_group_name + "MeshMaterial",
 				resource_group_name);
 	}
-
-	mesh_node_.reset(this->scene_node_->createChildSceneNode());
-    }
-
-  // Create our manual object if not created yet.
-    if (!manual_object_)
-    {
-	manual_object_.reset(context_->getSceneManager()
-				     ->createManualObject("MeshObject"));
-	mesh_node_->attachObject(manual_object_.get());
     }
 
   // Transform corner points of the quad into the RViz frame.
