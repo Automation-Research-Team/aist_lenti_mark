@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="node"		default="aist_lenti_mark"/>
+  <arg name="node"		default="get_screen_corners"/>
   <arg name="camera_name"	default="usb_camera"/>
   <arg name="camera_frame"	default="$(arg camera_name)_optical_frame"/>
   <arg name="cam_param_file"
@@ -46,6 +46,6 @@
   </include>
 
   <node name="$(anon rviz)" pkg="rviz" type="rviz" output="screen"
-	args="-d $(dirname)/$(arg camera_name).rviz"/>
+  	args="-d $(dirname)/$(arg camera_name).rviz"/>
 
 </launch>
