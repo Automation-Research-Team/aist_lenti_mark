@@ -203,53 +203,57 @@ TexturedMeshDisplay::createMesh()
 	}
     }
 
-  // Transform corner points of the mesh into the RViz frame.
-    Ogre::Vector3	corners[4];
+    std::lock_guard<std::mutex>	lock(mesh_mutex_);
+
+  // Get a transform from the frame reprenting the mesh to the RViz frame.
+    Ogre::Vector3	position;
+    Ogre::Quaternion	orientation;
+    if (!context_->getFrameManager()->getTransform(cur_mesh_->header.frame_id,
+						   ros::Time(0),
+						   position, orientation))
+	throw std::runtime_error("Error transforming from fixed frame to frame " + cur_mesh_->header.frame_id);
+    Ogre::Matrix4	transform;
+    transform.makeTransform(position, Ogre::Vector3(1.0, 1.0, 1.0),
+			    orientation);
+
+  // Compute normals for all vertices.
+    std::vector<Ogre::Vector3>	normals(cur_mesh_->mesh.vertices.size());
+    for (const auto& triangle : cur_mesh_->mesh.triangles)
     {
-	std::lock_guard<std::mutex>	lock(mesh_mutex_);
-
-      // Get a transform from the frame reprenting the mesh to the RViz frame.
-	Ogre::Vector3		position;
-	Ogre::Quaternion	orientation;
-	if (!context_->getFrameManager()
-		     ->getTransform(cur_mesh_->header.frame_id,
-				    ros::Time(0), position, orientation))
-	    throw std::runtime_error("Error transforming from fixed frame to frame " + cur_mesh_->header.frame_id);
-	Ogre::Matrix4	transform;
-	transform.makeTransform(position, Ogre::Vector3(1.0, 1.0, 1.0),
-				orientation);
-
-      // Transform corner potins.
-	corners[0] = transform.transformAffine(fromMsg(cur_mesh_->top_left));
-	corners[1] = transform.transformAffine(fromMsg(cur_mesh_->bottom_left));
-	corners[2] = transform.transformAffine(fromMsg(cur_mesh_->bottom_right));
-	corners[3] = transform.transformAffine(fromMsg(cur_mesh_->top_right));
+	const auto	i0 = triangle.vertex_indices[0];
+	const auto	i1 = triangle.vertex_indices[1];
+	const auto	i2 = triangle.vertex_indices[2];
+	const auto	v0 = fromMsg(cur_mesh_->mesh.vertices[i0]);
+	const auto	v1 = fromMsg(cur_mesh_->mesh.vertices[i1]);
+	const auto	v2 = fromMsg(cur_mesh_->mesh.vertices[i2]);
+	auto		normal = (v1 - v0).crossProduct(v2 - v1);
+	normal.normalise();
+	normals[i0] = normal;
+	normals[i1] = normal;
+	normals[i2] = normal;
     }
 
-  // Compute normal of the mesh.
-    auto	normal = (corners[1] - corners[0])
-			.crossProduct(corners[2] - corners[1]);
-    normal.normalise();
-
-  // Add corner positions as welll as normals and texture coordinates.
+  // Add positions, normals and texture coordinates to the manual object.
     manual_object_->clear();
     manual_object_->estimateVertexCount(4);
     manual_object_->begin(mesh_material_->getName(),
 			  Ogre::RenderOperation::OT_TRIANGLE_LIST);
-    manual_object_->position(corners[0]);
-    manual_object_->normal(normal);
-    manual_object_->textureCoord(0, 0);
-    manual_object_->position(corners[1]);
-    manual_object_->normal(normal);
-    manual_object_->textureCoord(0, 1);
-    manual_object_->position(corners[2]);
-    manual_object_->normal(normal);
-    manual_object_->textureCoord(1, 1);
-    manual_object_->position(corners[3]);
-    manual_object_->normal(normal);
-    manual_object_->textureCoord(1, 0);
-    manual_object_->triangle(0, 1, 3);
-    manual_object_->triangle(2, 3, 1);
+
+    for (size_t i = 0; i < cur_mesh_->mesh.vertices.size(); ++i)
+    {
+	const auto&	vertex = cur_mesh_->mesh.vertices[i];
+	manual_object_->position(transform.transformAffine(fromMsg(vertex)));
+	manual_object_->normal(orientation * normals[i]);
+	manual_object_->textureCoord(cur_mesh_->u[i], cur_mesh_->v[i]);
+    }
+
+    for (const auto& triangle : cur_mesh_->mesh.triangles)
+    {
+	manual_object_->triangle(triangle.vertex_indices[0],
+				 triangle.vertex_indices[1],
+				 triangle.vertex_indices[2]);
+    }
+
     manual_object_->end();
 }
 

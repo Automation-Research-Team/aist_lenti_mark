@@ -71,6 +71,10 @@ class ImageProjectorNode
 				    const cv::Point3f& marker_pos,
 				    const cv::Matx33f& marker_rot,
 				    const cv::Point2f& image_point)	;
+    mesh_t	create_mesh(const std_msgs::Header& header, int marker_id,
+			    const cv::Point3f& marker_pos,
+			    const cv::Matx33f& marker_rot,
+			    int image_width, int image_height)		;
     const std::string&
 		getName()	const	{ return _nodelet_name; }
 
@@ -257,6 +261,17 @@ ImageProjectorNode::get_point_on_screen(int marker_id,
 
   // Transform the screen point to the marker corrdinate frame.
     return marker_rot.t() * (screen_point - marker_pos);
+}
+
+ImageProjectorNode::mesh_t
+ImageProjectorNode::create_mesh(const std_msgs::Header& header, int marker_id,
+				const cv::Point3f& marker_pos,
+				const cv::Matx33f& marker_rot,
+				int image_width, int image_height)
+{
+    mesh_t	mesh;
+
+    return mesh;
 }
 
 /************************************************************************

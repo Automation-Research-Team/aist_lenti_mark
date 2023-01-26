@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
     message_generation
     tf2_ros
     tf2_geometry_msgs
+    shape_msgs
     visualization_msgs
     rviz
 )
@@ -34,12 +35,14 @@ add_message_files(
     Marker.msg
     Markers.msg
     QuadStamped.msg
+    TexturedMeshStamped.msg
 )
 
 generate_messages(
   DEPENDENCIES
     std_msgs
     geometry_msgs
+    shape_msgs
 )
 
 catkin_package(
@@ -50,6 +53,7 @@ catkin_package(
     nodelet
     tf2_ros
     tf2_geometry_msgs
+    shape_msgs
 )
 
 
@@ -104,13 +108,26 @@ add_dependencies(textured_quad_display
 
 target_link_libraries(textured_quad_display
   ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
+  ${QT_LIBRARIES}
+)
+
+add_library(textured_mesh_display
+  src/textured_mesh_display.cpp
+)
+
+add_dependencies(textured_mesh_display
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+target_link_libraries(textured_mesh_display
+  ${catkin_LIBRARIES}
   ${QT_LIBRARIES}
 )
 
 install(
   TARGETS
-    ${PROJECT_NAME} image_projector textured_quad_display
+    ${PROJECT_NAME} image_projector textured_quad_display textured_mesh_display
   ARCHIVE
     DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY
