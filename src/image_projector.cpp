@@ -8,7 +8,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <cv_bridge/cv_bridge.h>
 #include <aist_lenti_mark/Markers.h>
-#include <aist_lenti_mark/QuadStamped.h>
+#include <aist_lenti_mark/TexturedMeshStamped.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
@@ -51,7 +51,7 @@ class ImageProjectorNode
     using image_cp	 = sensor_msgs::ImageConstPtr;
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
     using vis_marker_t	 = visualization_msgs::Marker;
-    using quad_t	 = QuadStamped;
+    using mesh_t	 = TexturedMeshStamped;
 
   public:
 		ImageProjectorNode(const ros::NodeHandle& nh,
@@ -79,10 +79,12 @@ class ImageProjectorNode
     const std::string			_nodelet_name;
     const std::string			_marker_frame;
     const float				_screen_offset;
+    const size_t			_nsteps_h;
+    const size_t			_nsteps_v;
     image_transport::ImageTransport	_it;
     image_transport::CameraSubscriber	_camera_sub;
     image_transport::Subscriber		_image_sub;
-    const ros::Publisher		_quad_pub;
+    const ros::Publisher		_mesh_pub;
     const ros::Publisher		_vis_marker_pub;
     tf2_ros::TransformBroadcaster	_broadcaster;
     leag::LentiMarkTracker		_tracker;
@@ -94,6 +96,8 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
      _nodelet_name(nodelet_name),
      _marker_frame(_nh.param<std::string>("marker_frame", "marker_frame")),
      _screen_offset(_nh.param<float>("screen_offset", 0.025)),
+     _nsteps_h(_nh.param<float>("nsteps_h", 10)),
+     _nsteps_v(_nh.param<float>("nsteps_v", 10)),
      _it(_nh),
      _camera_sub(_nh.param<bool>("subscribe_camera", false) ?
 		 _it.subscribeCamera("/image", 10,
@@ -103,7 +107,7 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10,
 			      &ImageProjectorNode::image_cb, this)),
-     _quad_pub(_nh.advertise<quad_t>("quad", 1)),
+     _mesh_pub(_nh.advertise<mesh_t>("mesh", 1)),
      _vis_marker_pub(_nh.advertise<vis_marker_t>("marker", 1)),
      _broadcaster(),
      _tracker()
@@ -170,11 +174,6 @@ ImageProjectorNode::image_cb(const image_cp& img)
 				     data.rot[3], data.rot[4], data.rot[5],
 				     data.rot[6], data.rot[7], data.rot[8]);
 
-      // Get screen corner points.
-	const auto	corners = get_screen_corners(data.id,
-						     marker_pos, marker_rot,
-						     image.cols, image.rows);
-
       // Broadcast transform from camera frame to marker frame.
 	const tf2::Stamped<tf2::Transform>
 	    transform{tf2::Transform{
@@ -188,14 +187,15 @@ ImageProjectorNode::image_cb(const image_cp& img)
 	transform_msg.child_frame_id = img->header.frame_id;
 	_broadcaster.sendTransform(transform_msg);
 
-      // Create and publish quad
-	quad_t	quad;
-	quad.header	  = transform_msg.header;
-	quad.top_left	  = toMsg(corners[0]);
-	quad.bottom_left  = toMsg(corners[1]);
-	quad.bottom_right = toMsg(corners[2]);
-	quad.top_right	  = toMsg(corners[3]);
-	_quad_pub.publish(quad);
+      // Create and publish mesh
+	_mesh_pub.publish(create_mesh(transform_msg.header, data.id,
+				      marker_pos, marker_rot,
+				      image.cols, image.rows));
+
+      // Get screen corner points.
+	const auto	corners = get_screen_corners(data.id,
+						     marker_pos, marker_rot,
+						     image.cols, image.rows);
 
       // Create and publish visualization marker.
 	vis_marker_t	vis_marker;
@@ -227,9 +227,9 @@ ImageProjectorNode::image_cb(const image_cp& img)
 
 std::array<cv::Point3f, 4>
 ImageProjectorNode::get_screen_corners(int marker_id,
-					 const cv::Point3f& marker_pos,
-					 const cv::Matx33f& marker_rot,
-					 int image_width, int image_height)
+				       const cv::Point3f& marker_pos,
+				       const cv::Matx33f& marker_rot,
+				       int image_width, int image_height)
 {
     return {get_point_on_screen(marker_id, marker_pos, marker_rot,
 				cv::Point2f(0, 0)),
@@ -243,9 +243,9 @@ ImageProjectorNode::get_screen_corners(int marker_id,
 
 cv::Point3f
 ImageProjectorNode::get_point_on_screen(int marker_id,
-					  const cv::Point3f& marker_pos,
-					  const cv::Matx33f& marker_rot,
-					  const cv::Point2f& image_point)
+					const cv::Point3f& marker_pos,
+					const cv::Matx33f& marker_rot,
+					const cv::Point2f& image_point)
 {
   // Get 3D point on the marker plane correnponding to the image point.
     cv::Point3f	screen_point;
