@@ -78,16 +78,16 @@ target_link_libraries(${PROJECT_NAME}
   ${LEAG_LIBS}
 )
 
-add_library(get_screen_corners
-  src/get_screen_corners.cpp
+add_library(image_projector
+  src/image_projector.cpp
 )
 
-add_dependencies(get_screen_corners
+add_dependencies(image_projector
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
 
-target_link_libraries(get_screen_corners
+target_link_libraries(image_projector
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${LEAG_LIBS}
@@ -110,7 +110,7 @@ target_link_libraries(textured_quad_display
 
 install(
   TARGETS
-    ${PROJECT_NAME} get_screen_corners textured_quad_display
+    ${PROJECT_NAME} image_projector textured_quad_display
   ARCHIVE
     DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY

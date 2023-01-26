@@ -43,9 +43,9 @@ identity()
 }
 
 /************************************************************************
-*  class GetScreenCornersNode						*
+*  class ImageProjectorNode						*
 ************************************************************************/
-class GetScreenCornersNode
+class ImageProjectorNode
 {
   private:
     using image_cp	 = sensor_msgs::ImageConstPtr;
@@ -54,9 +54,9 @@ class GetScreenCornersNode
     using quad_t	 = QuadStamped;
 
   public:
-		GetScreenCornersNode(const ros::NodeHandle& nh,
-				     const std::string& nodelet_name)	;
-		~GetScreenCornersNode()					{}
+		ImageProjectorNode(const ros::NodeHandle& nh,
+				   const std::string& nodelet_name)	;
+		~ImageProjectorNode()					{}
 
   private:
     void	camera_cb(const image_cp& img,
@@ -88,8 +88,8 @@ class GetScreenCornersNode
     leag::LentiMarkTracker		_tracker;
 };
 
-GetScreenCornersNode::GetScreenCornersNode(const ros::NodeHandle& nh,
-					   const std::string& nodelet_name)
+ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
+				       const std::string& nodelet_name)
     :_nh(nh),
      _nodelet_name(nodelet_name),
      _marker_frame(_nh.param<std::string>("marker_frame", "marker_frame")),
@@ -97,12 +97,12 @@ GetScreenCornersNode::GetScreenCornersNode(const ros::NodeHandle& nh,
      _it(_nh),
      _camera_sub(_nh.param<bool>("subscribe_camera", false) ?
 		 _it.subscribeCamera("/image", 10,
-				     &GetScreenCornersNode::camera_cb, this) :
+				     &ImageProjectorNode::camera_cb, this) :
 		 image_transport::CameraSubscriber()),
      _image_sub(_nh.param<bool>("subscribe_camera", false) ?
 		image_transport::Subscriber() :
 		_it.subscribe("/image_raw", 10,
-			      &GetScreenCornersNode::image_cb, this)),
+			      &ImageProjectorNode::image_cb, this)),
      _quad_pub(_nh.advertise<quad_t>("quad", 1)),
      _vis_marker_pub(_nh.advertise<vis_marker_t>("marker", 1)),
      _broadcaster(),
@@ -126,7 +126,7 @@ GetScreenCornersNode::GetScreenCornersNode(const ros::NodeHandle& nh,
 }
 
 void
-GetScreenCornersNode::camera_cb(const image_cp& img,
+ImageProjectorNode::camera_cb(const image_cp& img,
 				const camera_info_cp& cinfo)
 {
     const cv::Size2i	img_size(cinfo->width, cinfo->height);
@@ -138,7 +138,7 @@ GetScreenCornersNode::camera_cb(const image_cp& img,
 }
 
 void
-GetScreenCornersNode::image_cb(const image_cp& img)
+ImageProjectorNode::image_cb(const image_cp& img)
 {
     try
     {
@@ -226,7 +226,7 @@ GetScreenCornersNode::image_cb(const image_cp& img)
 }
 
 std::array<cv::Point3f, 4>
-GetScreenCornersNode::get_screen_corners(int marker_id,
+ImageProjectorNode::get_screen_corners(int marker_id,
 					 const cv::Point3f& marker_pos,
 					 const cv::Matx33f& marker_rot,
 					 int image_width, int image_height)
@@ -242,7 +242,7 @@ GetScreenCornersNode::get_screen_corners(int marker_id,
 }
 
 cv::Point3f
-GetScreenCornersNode::get_point_on_screen(int marker_id,
+ImageProjectorNode::get_point_on_screen(int marker_id,
 					  const cv::Point3f& marker_pos,
 					  const cv::Matx33f& marker_rot,
 					  const cv::Point2f& image_point)
@@ -260,27 +260,27 @@ GetScreenCornersNode::get_point_on_screen(int marker_id,
 }
 
 /************************************************************************
-*  class GetScreenCornersNodelet					*
+*  class ImageProjectorNodelet						*
 ************************************************************************/
-class GetScreenCornersNodelet : public nodelet::Nodelet
+class ImageProjectorNodelet : public nodelet::Nodelet
 {
   public:
-			GetScreenCornersNodelet()			{}
+			ImageProjectorNodelet()				{}
 
     virtual void	onInit()					;
 
   private:
-    boost::shared_ptr<GetScreenCornersNode>	_node;
+    boost::shared_ptr<ImageProjectorNode>	_node;
 };
 
 void
-GetScreenCornersNodelet::onInit()
+ImageProjectorNodelet::onInit()
 {
-    NODELET_INFO("aist_lenti_mark::GetScreenCornersNodelet::onInit()");
-    _node.reset(new GetScreenCornersNode(getPrivateNodeHandle(), getName()));
+    NODELET_INFO("aist_lenti_mark::ImageProjectorNodelet::onInit()");
+    _node.reset(new ImageProjectorNode(getPrivateNodeHandle(), getName()));
 }
 
 }	// namespace aist_lenti_mark
 
-PLUGINLIB_EXPORT_CLASS(aist_lenti_mark::GetScreenCornersNodelet,
+PLUGINLIB_EXPORT_CLASS(aist_lenti_mark::ImageProjectorNodelet,
 		       nodelet::Nodelet);

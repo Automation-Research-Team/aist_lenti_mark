@@ -248,7 +248,8 @@ TexturedQuadDisplay::createMesh()
     manual_object_->position(points[3]);
     manual_object_->normal(normal);
     manual_object_->textureCoord(1, 0);
-    manual_object_->quad(0, 1, 2, 3);
+    manual_object_->triangle(0, 1, 3);
+    manual_object_->triangle(2, 3, 1);
     manual_object_->end();
 }
 
@@ -256,7 +257,6 @@ void
 TexturedQuadDisplay::updateMeshProperties()
 {
     const auto	pass = mesh_material_->getTechnique(0)->getPass(0);
-
     pass->setSelfIllumination(Ogre::ColourValue(0.0f, 0.0f, 0.0f, 0.0f));
     pass->setDiffuse(Ogre::ColourValue(0.0f, 0.0f, 0.0f, 1.0f));
     pass->setAmbient(Ogre::ColourValue(1.0f, 1.0f, 1.0f, 1.0f));
@@ -272,7 +272,6 @@ void
 TexturedQuadDisplay::updateCamera()
 {
     const auto	pass = mesh_material_->getTechnique(0)->createPass();
-
     pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
     pass->setDepthBias(1);
 
