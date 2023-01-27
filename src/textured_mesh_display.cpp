@@ -211,7 +211,8 @@ TexturedMeshDisplay::createMesh()
     if (!context_->getFrameManager()->getTransform(cur_mesh_->header.frame_id,
 						   ros::Time(0),
 						   position, orientation))
-	throw std::runtime_error("Error transforming from fixed frame to frame " + cur_mesh_->header.frame_id);
+	throw std::runtime_error("Error transforming from fixed frame to frame "
+				 + cur_mesh_->header.frame_id);
     Ogre::Matrix4	transform;
     transform.makeTransform(position, Ogre::Vector3(1.0, 1.0, 1.0),
 			    orientation);
@@ -220,17 +221,17 @@ TexturedMeshDisplay::createMesh()
     std::vector<Ogre::Vector3>	normals(cur_mesh_->mesh.vertices.size());
     for (const auto& triangle : cur_mesh_->mesh.triangles)
     {
-	const auto	i0 = triangle.vertex_indices[0];
-	const auto	i1 = triangle.vertex_indices[1];
-	const auto	i2 = triangle.vertex_indices[2];
-	const auto	v0 = fromMsg(cur_mesh_->mesh.vertices[i0]);
-	const auto	v1 = fromMsg(cur_mesh_->mesh.vertices[i1]);
-	const auto	v2 = fromMsg(cur_mesh_->mesh.vertices[i2]);
-	auto		normal = (v1 - v0).crossProduct(v2 - v1);
+	const auto	idx0 = triangle.vertex_indices[0];
+	const auto	idx1 = triangle.vertex_indices[1];
+	const auto	idx2 = triangle.vertex_indices[2];
+	const auto	vtx0 = fromMsg(cur_mesh_->mesh.vertices[idx0]);
+	const auto	vtx1 = fromMsg(cur_mesh_->mesh.vertices[idx1]);
+	const auto	vtx2 = fromMsg(cur_mesh_->mesh.vertices[idx2]);
+	auto		normal = (vtx1 - vtx0).crossProduct(vtx2 - vtx1);
 	normal.normalise();
-	normals[i0] = normal;
-	normals[i1] = normal;
-	normals[i2] = normal;
+	normals[idx0] = normal;
+	normals[idx1] = normal;
+	normals[idx2] = normal;
     }
 
   // Add positions, normals and texture coordinates to the manual object.

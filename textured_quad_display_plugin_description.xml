@@ -1,9 +1,0 @@
-<library path="lib/libtextured_quad_display">
-  <class name="aist_lenti_mark/TexturedQuad"
-         type="rviz::TexturedQuadDisplay"
-         base_class_type="rviz::Display">
-    <description>
-      Display plugin for textured quads
-    </description>
-  </class>
-</library>

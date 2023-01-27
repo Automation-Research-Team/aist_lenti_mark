@@ -61,7 +61,7 @@ LentiMarkNode::LentiMarkNode(const ros::NodeHandle& nh,
 		 image_transport::CameraSubscriber()),
      _image_sub(_nh.param<bool>("subscribe_camera", false) ?
 		image_transport::Subscriber() :
-		_it.subscribe("/image_raw", 10, &LentiMarkNode::image_cb, this)),
+		_it.subscribe("/image", 10, &LentiMarkNode::image_cb, this)),
      _markers_pub(_nh.advertise<Markers>("lenti_mark", 10)),
      _broadcaster(),
      _tracker()

@@ -4,8 +4,6 @@
   <arg name="cam_param_file"	default=""/>
   <arg name="mk_param_file"
        default="$(dirname)/../config/MarkerParams/markerPara.yml"/>
-  <arg name="marker_frame"	default="marker_frame"/>
-  <arg name="subscribe_camera"	default="false"/>
   <arg name="image_topic"	default="/camera/image_raw"/>
   <arg name="manager"		default=""/>
 
@@ -14,15 +12,11 @@
 
   <node name="$(arg node)" pkg="nodelet" type="nodelet" output="screen"
   	args="$(arg command) aist_lenti_mark/$(arg node) $(arg manager)">
-    <remap if="$(arg subscribe_camera)"
-	   from="/image"		to="$(arg image_topic)"/>
-    <remap unless="$(arg subscribe_camera)"
-	   from="/image_raw"		to="$(arg image_topic)"/>
-
-    <!-- Other parameters -->
+    <rosparam file="$(dirname)/../config/$(arg node).yaml"/>
     <param name="cam_param_file"	value="$(arg cam_param_file)"/>
     <param name="mk_param_file"		value="$(arg mk_param_file)"/>
-    <param name="marker_frame"		value="$(arg marker_frame)"/>
+
+    <remap from="/image"		to="$(arg image_topic)"/>
   </node>
 
 </launch>

@@ -34,7 +34,6 @@ add_message_files(
   FILES
     Marker.msg
     Markers.msg
-    QuadStamped.msg
     TexturedMeshStamped.msg
 )
 
@@ -55,7 +54,6 @@ catkin_package(
     tf2_geometry_msgs
     shape_msgs
 )
-
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
@@ -97,20 +95,6 @@ target_link_libraries(image_projector
   ${LEAG_LIBS}
 )
 
-add_library(textured_quad_display
-  src/textured_quad_display.cpp
-)
-
-add_dependencies(textured_quad_display
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-
-target_link_libraries(textured_quad_display
-  ${catkin_LIBRARIES}
-  ${QT_LIBRARIES}
-)
-
 add_library(textured_mesh_display
   src/textured_mesh_display.cpp
 )
@@ -127,7 +111,7 @@ target_link_libraries(textured_mesh_display
 
 install(
   TARGETS
-    ${PROJECT_NAME} image_projector textured_quad_display textured_mesh_display
+    ${PROJECT_NAME} image_projector textured_mesh_display
   ARCHIVE
     DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY

@@ -27,6 +27,6 @@
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <nodelet plugin="${prefix}/nodelet_description.xml"/>
-    <rviz plugin="${prefix}/textured_quad_display_plugin_description.xml"/>
+    <rviz    plugin="${prefix}/plugin_description.xml"/>
   </export>
 </package>
