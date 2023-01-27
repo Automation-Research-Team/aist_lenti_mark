@@ -65,16 +65,16 @@ class ImageProjectorNode
 			  const camera_info_cp& cinfo)			;
     void	image_cb(const image_cp& img)				;
 
-    void	set_vertices_to_mesh(int marker_id,
+    void	set_vertices_to_mesh(uint32_t marker_id,
 				     const cv::Point3f& marker_pos,
 				     const cv::Matx33f& marker_rot,
 				     int image_width, int image_height)	;
     std::array<cv::Point3f, 4>
-		get_screen_corners(int marker_id,
+		get_screen_corners(uint32_t marker_id,
 				   const cv::Point3f& marker_pos,
 				   const cv::Matx33f& marker_rot,
 				   int image_width, int image_height) const;
-    cv::Point3f	get_point_on_screen(int marker_id,
+    cv::Point3f	get_point_on_screen(uint32_t marker_id,
 				    const cv::Point3f& marker_pos,
 				    const cv::Matx33f& marker_rot,
 				    const cv::Point2f& image_point) const;
@@ -118,7 +118,7 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
      _broadcaster(),
      _ddr(_nh),
      _tracker(),
-     _screen_offset(_nh.param<float>("screen_offset", 0.025)),
+     _screen_offset(0.025),
      _nsteps_u(_nh.param<int>("nsteps_u", 10)),
      _nsteps_v(_nh.param<int>("nsteps_v", 10)),
      _mesh()
@@ -147,7 +147,7 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
     _mesh.header.frame_id = _nh.param<std::string>("marker_frame",
 						   "marker_frame");
 
-  // 2. Allocate buffers for storing triangles, vertices and texture coordinates.
+  // 2. Allocate buffers for triangles, vertices and texture coordinates.
     _mesh.mesh.triangles.resize(2 * _nsteps_u * _nsteps_v);
     _mesh.mesh.vertices.resize((_nsteps_u + 1)*(_nsteps_v + 1));
     _mesh.u.resize(_mesh.mesh.vertices.size());
@@ -158,16 +158,16 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
 	for (size_t i = 0; i < _nsteps_u; ++i)
 	{
 	    const auto	idx = i + j*(_nsteps_u + 1);
-	    const auto	n = i + j*_nsteps_u;
+	    const auto	n   = i + j*_nsteps_u;
 	    auto&	upper_triangle = _mesh.mesh.triangles[2*n];
 	    auto&	lower_triangle = _mesh.mesh.triangles[2*n + 1];
 
 	    upper_triangle.vertex_indices[0] = idx;
-	    upper_triangle.vertex_indices[1] = idx + _nsteps_u + 1;
+	    upper_triangle.vertex_indices[1] = idx + _nsteps_u + 2;
 	    upper_triangle.vertex_indices[2] = idx + 1;
-	    lower_triangle.vertex_indices[0] = idx + _nsteps_u + 2;
-	    lower_triangle.vertex_indices[1] = idx + 1;
-	    lower_triangle.vertex_indices[2] = idx + _nsteps_u + 1;
+	    lower_triangle.vertex_indices[0] = idx;
+	    lower_triangle.vertex_indices[1] = idx + _nsteps_u + 1;
+	    lower_triangle.vertex_indices[2] = idx + _nsteps_u + 2;
 	}
 
   // 4. Set texture coordinates.
@@ -281,17 +281,15 @@ ImageProjectorNode::image_cb(const image_cp& img)
 }
 
 void
-ImageProjectorNode::set_vertices_to_mesh(int marker_id,
+ImageProjectorNode::set_vertices_to_mesh(uint32_t marker_id,
 					 const cv::Point3f& marker_pos,
 					 const cv::Matx33f& marker_rot,
 					 int image_width, int image_height)
 {
-
     for (size_t j = 0; j <= _nsteps_v; ++j)
     {
 	cv::Point2f	image_point;
 	image_point.y = image_height * double(j)/double(_nsteps_v);
-
 
 	for (size_t i = 0; i <= _nsteps_u; ++i)
 	{
@@ -306,7 +304,7 @@ ImageProjectorNode::set_vertices_to_mesh(int marker_id,
 }
 
 std::array<cv::Point3f, 4>
-ImageProjectorNode::get_screen_corners(int marker_id,
+ImageProjectorNode::get_screen_corners(uint32_t marker_id,
 				       const cv::Point3f& marker_pos,
 				       const cv::Matx33f& marker_rot,
 				       int image_width, int image_height) const
@@ -322,7 +320,7 @@ ImageProjectorNode::get_screen_corners(int marker_id,
 }
 
 cv::Point3f
-ImageProjectorNode::get_point_on_screen(int marker_id,
+ImageProjectorNode::get_point_on_screen(uint32_t marker_id,
 					const cv::Point3f& marker_pos,
 					const cv::Matx33f& marker_rot,
 					const cv::Point2f& image_point) const
@@ -333,7 +331,7 @@ ImageProjectorNode::get_point_on_screen(int marker_id,
 
   // Scale the 3D point so that it lies on the screen.
     screen_point *= 0.001;				// milimeters => meters
-    screen_point *= (1.0f + _screen_offset/marker_rot.col(2).dot(screen_point));
+    screen_point *= (1.0 + _screen_offset/marker_rot.col(2).dot(screen_point));
 
   // Transform the screen point to the marker corrdinate frame.
     return marker_rot.t() * (screen_point - marker_pos);
