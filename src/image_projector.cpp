@@ -1,26 +1,28 @@
 /*!
-  \file		get_screen_corners.cpp
+  \file		image_projector.cpp
   \author	Toshio Ueshiba
 */
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <visualization_msgs/Marker.h>
+#include <ddynamic_reconfigure/ddynamic_reconfigure.h>
 #include <cv_bridge/cv_bridge.h>
 #include <aist_lenti_mark/Markers.h>
 #include <aist_lenti_mark/TexturedMeshStamped.h>
 #include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
-#include <visualization_msgs/Marker.h>
-#include <ddynamic_reconfigure/ddynamic_reconfigure.h>
 
 namespace aist_lenti_mark
 {
+/************************************************************************
+*  static functions							*
+************************************************************************/
 static geometry_msgs::Point
 toMsg(const cv::Point3f& p)
 {
-    geometry_msgs::Point	point;
+    geometry_msgs::Point point;
     point.x = p.x;
     point.y = p.y;
     point.z = p.z;
@@ -360,5 +362,6 @@ ImageProjectorNodelet::onInit()
 
 }	// namespace aist_lenti_mark
 
+#include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(aist_lenti_mark::ImageProjectorNodelet,
 		       nodelet::Nodelet);

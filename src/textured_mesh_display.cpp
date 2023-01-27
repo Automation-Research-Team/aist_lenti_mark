@@ -9,10 +9,13 @@
 
 namespace rviz
 {
+/************************************************************************
+*  static functions							*
+************************************************************************/
 static Ogre::Vector3
 fromMsg(const geometry_msgs::Point& p)
 {
-    return {p.x, p.y, p.z};
+    return {float(p.x), float(p.y), float(p.z)};
 }
 
 /************************************************************************
@@ -35,7 +38,8 @@ TexturedMeshDisplay::TexturedMeshDisplay()
 				  ros::message_traits::datatype<mesh_t>()),
 			      "Mesh topic to subscribe to.",
 			      this, SLOT(updateDisplayImages()))),
-     texture_(new ROSImageTexture())
+     texture_(new ROSImageTexture()),
+     num_vertices_of_last_mesh_(0)
 {
 }
 
@@ -72,8 +76,8 @@ TexturedMeshDisplay::update(float wall_dt, float ros_dt)
     {
 	if (cur_mesh_ && cur_image_)
 	{
-	    createTexture();	// Create texture_ from cur_image_
-	    createMesh();
+	    createTexture();		// Create texture_ from cur_image_
+	    createMesh();		// Create mesh_node_ from cur_mesh_
 	    updateMeshProperties();
 
 	    if (texture_ &&
@@ -190,10 +194,9 @@ TexturedMeshDisplay::createMesh()
 				     ->createManualObject("MeshObject"));
 	mesh_node_->attachObject(manual_object_.get());
 
-	const Ogre::String	resource_group_name = "MeshNode";
-
-	if (auto&& rg_mgr = Ogre::ResourceGroupManager::getSingleton();
-	    !rg_mgr.resourceGroupExists(resource_group_name))
+	const Ogre::String resource_group_name = "MeshNode";
+	auto&&		   rg_mgr = Ogre::ResourceGroupManager::getSingleton();
+	if (!rg_mgr.resourceGroupExists(resource_group_name))
 	{
 	    rg_mgr.createResourceGroup(resource_group_name);
 
@@ -205,14 +208,15 @@ TexturedMeshDisplay::createMesh()
 
     std::lock_guard<std::mutex>	lock(mesh_mutex_);
 
-  // Get a transform from the frame reprenting the mesh to the RViz frame.
+  // Get a transform from mesh frame to RViz display frame.
     Ogre::Vector3	position;
     Ogre::Quaternion	orientation;
     if (!context_->getFrameManager()->getTransform(cur_mesh_->header.frame_id,
 						   ros::Time(0),
 						   position, orientation))
-	throw std::runtime_error("Error transforming from fixed frame to frame "
-				 + cur_mesh_->header.frame_id);
+	throw std::runtime_error("Error transforming from mesh frame["
+				 + cur_mesh_->header.frame_id
+				 + "] to current RViz frame");
     Ogre::Matrix4	transform;
     transform.makeTransform(position, Ogre::Vector3(1.0, 1.0, 1.0),
 			    orientation);
@@ -235,10 +239,18 @@ TexturedMeshDisplay::createMesh()
     }
 
   // Add positions, normals and texture coordinates to the manual object.
-    manual_object_->clear();
-    manual_object_->estimateVertexCount(4);
-    manual_object_->begin(mesh_material_->getName(),
-			  Ogre::RenderOperation::OT_TRIANGLE_LIST);
+    if (cur_mesh_->mesh.vertices.size() == num_vertices_of_last_mesh_)
+    {
+	manual_object_->beginUpdate(0);
+    }
+    else
+    {
+	manual_object_->clear();
+	manual_object_->estimateVertexCount(cur_mesh_->mesh.vertices.size());
+	manual_object_->begin(mesh_material_->getName(),
+			      Ogre::RenderOperation::OT_TRIANGLE_LIST);
+	num_vertices_of_last_mesh_ = cur_mesh_->mesh.vertices.size();
+    }
 
     for (size_t i = 0; i < cur_mesh_->mesh.vertices.size(); ++i)
     {

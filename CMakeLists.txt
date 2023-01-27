@@ -107,6 +107,7 @@ add_dependencies(textured_mesh_display
 
 target_link_libraries(textured_mesh_display
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
   ${QT_LIBRARIES}
 )
 

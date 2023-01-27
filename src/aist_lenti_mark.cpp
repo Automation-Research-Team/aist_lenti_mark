@@ -9,7 +9,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <aist_lenti_mark/Markers.h>
 #include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
 
 namespace aist_lenti_mark
@@ -189,4 +188,5 @@ LentiMarkNodelet::onInit()
 
 }	// namespace aist_lenti_mark
 
+#include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(aist_lenti_mark::LentiMarkNodelet, nodelet::Nodelet);
