@@ -7,7 +7,6 @@ add_compile_options(-D _CODE)
 find_package(catkin REQUIRED
   COMPONENTS
     roscpp
-    rospy
     cv_bridge
     message_generation
     tf2_ros
