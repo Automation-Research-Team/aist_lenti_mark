@@ -13,6 +13,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <LentiMarkTracker.h>
 #include <visualization_msgs/Marker.h>
+#include <ddynamic_reconfigure/ddynamic_reconfigure.h>
 
 namespace aist_lenti_mark
 {
@@ -52,6 +53,7 @@ class ImageProjectorNode
     using camera_info_cp = sensor_msgs::CameraInfoConstPtr;
     using vis_marker_t	 = visualization_msgs::Marker;
     using mesh_t	 = TexturedMeshStamped;
+    using ddr_t		 = ddynamic_reconfigure::DDynamicReconfigure;
 
   public:
 		ImageProjectorNode(const ros::NodeHandle& nh,
@@ -88,10 +90,11 @@ class ImageProjectorNode
     const ros::Publisher		_mesh_pub;
     const ros::Publisher		_vis_marker_pub;
     tf2_ros::TransformBroadcaster	_broadcaster;
+    ddr_t				_ddr;
 
     mutable leag::LentiMarkTracker	_tracker;
 
-    const float				_screen_offset;
+    double				_screen_offset;
     const size_t			_nsteps_u;
     const size_t			_nsteps_v;
     mesh_t				_mesh;
@@ -113,12 +116,20 @@ ImageProjectorNode::ImageProjectorNode(const ros::NodeHandle& nh,
      _mesh_pub(_nh.advertise<mesh_t>("mesh", 1)),
      _vis_marker_pub(_nh.advertise<vis_marker_t>("marker", 1)),
      _broadcaster(),
+     _ddr(_nh),
      _tracker(),
      _screen_offset(_nh.param<float>("screen_offset", 0.025)),
      _nsteps_u(_nh.param<int>("nsteps_u", 10)),
      _nsteps_v(_nh.param<int>("nsteps_v", 10)),
      _mesh()
 {
+  // Setup ddynamic_reconfigure server.
+    _ddr.registerVariable<double>("screen_offset", &_screen_offset,
+				  "Height offset of the virtual screen",
+				  -0.2, 0.2);
+    _ddr.publishServicesTopics();
+
+  // Set camera and marker parameters to LEAG tracker.
     const auto	cam_file = _nh.param<std::string>("cam_param_file", "");
     if (cam_file != "" && _tracker.setCamParams(cam_file))
 	throw std::runtime_error("Failed to set camera parameters from file["
