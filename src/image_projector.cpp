@@ -76,10 +76,10 @@ class ImageProjectorNode
 				   const cv::Point3f& marker_pos,
 				   const cv::Matx33f& marker_rot,
 				   int image_width, int image_height) const;
-    cv::Point3f	get_point_on_screen(uint32_t marker_id,
-				    const cv::Point3f& marker_pos,
-				    const cv::Matx33f& marker_rot,
-				    const cv::Point2f& image_point) const;
+    cv::Point3f	get_screen_point(uint32_t marker_id,
+				 const cv::Point3f& marker_pos,
+				 const cv::Matx33f& marker_rot,
+				 const cv::Point2f& image_point) const	;
     const std::string&
 		getName()	const	{ return _nodelet_name; }
 
@@ -288,21 +288,11 @@ ImageProjectorNode::set_vertices_to_mesh(uint32_t marker_id,
 					 const cv::Matx33f& marker_rot,
 					 int image_width, int image_height)
 {
-    for (size_t j = 0; j <= _nsteps_v; ++j)
-    {
-	cv::Point2f	image_point;
-	image_point.y = image_height * double(j)/double(_nsteps_v);
-
-	for (size_t i = 0; i <= _nsteps_u; ++i)
-	{
-	    image_point.x = image_width * double(i)/double(_nsteps_u);
-
-	    const auto	idx = i + j*(_nsteps_u + 1);
-	    _mesh.mesh.vertices[idx] = toMsg(get_point_on_screen(
-						 marker_id, marker_pos,
-						 marker_rot, image_point));
-	}
-    }
+    for (size_t idx = 0; idx < _mesh.mesh.vertices.size(); ++idx)
+	_mesh.mesh.vertices[idx]
+	    = toMsg(get_screen_point(marker_id, marker_pos, marker_rot,
+				     cv::Point2f(_mesh.u[idx]*image_width,
+						 _mesh.v[idx]*image_height)));
 }
 
 std::array<cv::Point3f, 4>
@@ -311,21 +301,21 @@ ImageProjectorNode::get_screen_corners(uint32_t marker_id,
 				       const cv::Matx33f& marker_rot,
 				       int image_width, int image_height) const
 {
-    return {get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(0, 0)),
-	    get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(0, image_height)),
-	    get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(image_width, image_height)),
-	    get_point_on_screen(marker_id, marker_pos, marker_rot,
-				cv::Point2f(image_width, 0))};
+    return {get_screen_point(marker_id, marker_pos, marker_rot,
+			     cv::Point2f(0, 0)),
+	    get_screen_point(marker_id, marker_pos, marker_rot,
+			     cv::Point2f(0, image_height)),
+	    get_screen_point(marker_id, marker_pos, marker_rot,
+			     cv::Point2f(image_width, image_height)),
+	    get_screen_point(marker_id, marker_pos, marker_rot,
+			     cv::Point2f(image_width, 0))};
 }
 
 cv::Point3f
-ImageProjectorNode::get_point_on_screen(uint32_t marker_id,
-					const cv::Point3f& marker_pos,
-					const cv::Matx33f& marker_rot,
-					const cv::Point2f& image_point) const
+ImageProjectorNode::get_screen_point(uint32_t marker_id,
+				     const cv::Point3f& marker_pos,
+				     const cv::Matx33f& marker_rot,
+				     const cv::Point2f& image_point) const
 {
   // Get 3D point on the marker plane correnponding to the image point.
     cv::Point3f	screen_point;
