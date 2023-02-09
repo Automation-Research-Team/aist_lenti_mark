@@ -80,7 +80,6 @@ class TexturedMeshDisplay: public rviz::Display,
     std::unique_ptr<Ogre::SceneNode>	mesh_node_;
     std::unique_ptr<Ogre::ManualObject>	manual_object_;
     Ogre::MaterialPtr			mesh_material_;
-    size_t				num_vertices_of_last_mesh_;
 
     std::mutex				image_mutex_;
     std::mutex				mesh_mutex_;

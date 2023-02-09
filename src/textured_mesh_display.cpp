@@ -38,8 +38,7 @@ TexturedMeshDisplay::TexturedMeshDisplay()
 				  ros::message_traits::datatype<mesh_t>()),
 			      "Mesh topic to subscribe to.",
 			      this, SLOT(updateDisplayImages()))),
-     texture_(new ROSImageTexture()),
-     num_vertices_of_last_mesh_(0)
+     texture_(new ROSImageTexture())
 {
 }
 
@@ -239,7 +238,8 @@ TexturedMeshDisplay::createMesh()
     }
 
   // Add positions, normals and texture coordinates to the manual object.
-    if (cur_mesh_->mesh.vertices.size() == num_vertices_of_last_mesh_)
+    if (manual_object_->getCurrentVertexCount()
+	== cur_mesh_->mesh.vertices.size())
     {
 	manual_object_->beginUpdate(0);
     }
@@ -249,7 +249,6 @@ TexturedMeshDisplay::createMesh()
 	manual_object_->estimateVertexCount(cur_mesh_->mesh.vertices.size());
 	manual_object_->begin(mesh_material_->getName(),
 			      Ogre::RenderOperation::OT_TRIANGLE_LIST);
-	num_vertices_of_last_mesh_ = cur_mesh_->mesh.vertices.size();
     }
 
     for (size_t i = 0; i < cur_mesh_->mesh.vertices.size(); ++i)
